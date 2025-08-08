@@ -19,7 +19,6 @@ DJANGO_APPS = [
 LOCAL_APPS = [
     "apps.users",
     "apps.common",
-    "apps.category",
     "apps.profiles",
     "apps.vehicle",
 ]

@@ -18,10 +18,8 @@ urlpatterns = [
         name="redoc",
     ),
     path("api/v1/auth/", include("apps.users.urls"), name="users"),
-    path("api/v1/category/", include("apps.category.urls"), name="category"),
-    
     path("api/v1/profiles/", include("apps.profiles.urls"), name="profiles"),
-   
+    path("api/v1/vehicle/", include("apps.vehicle.urls"), name="vehicle"),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 admin.site.site_header = "Online Shopping Center Admin"

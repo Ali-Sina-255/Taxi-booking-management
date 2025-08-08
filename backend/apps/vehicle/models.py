@@ -1,3 +1,4 @@
+from apps.common.models import TimeStampedModel
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -10,7 +11,7 @@ User = get_user_model()
 # ----------------------------
 
 
-class Vehicle(models.Model):
+class Vehicle(TimeStampedModel):
     LUXURY = "luxury"
     ECONOMY = "economy"
     SUV = "suv"
@@ -45,7 +46,7 @@ class Vehicle(models.Model):
 # ----------------------------
 
 
-class Location(models.Model):
+class Location(TimeStampedModel):
     name = models.CharField(max_length=255, unique=True)
 
     def __str__(self):
@@ -57,7 +58,7 @@ class Location(models.Model):
 # ----------------------------
 
 
-class Route(models.Model):
+class Route(TimeStampedModel):
     pickup = models.ForeignKey(
         Location, related_name="routes_from", on_delete=models.CASCADE
     )
@@ -90,7 +91,7 @@ class Route(models.Model):
 # ----------------------------
 
 
-class Trip(models.Model):
+class Trip(TimeStampedModel):
     passenger = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="passenger_trips"
     )
