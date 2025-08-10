@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import ProductListPage from "./ProductListPage";
 import { motion, AnimatePresence } from "framer-motion";
+import WhyChooseUs from "../Components/WhyChooseUs";
+import Services from "../Components/services";
+import HowToGetStarted from "../Components/HowToGetStarted";
 
 const HomePage = (props) => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -70,99 +73,59 @@ const HomePage = (props) => {
 
   return (
     <div className="relative">
-      <div className="relative h-screen max-h-[600px] w-full overflow-hidden">
-        <AnimatePresence initial={false}>
+      <div className="relative h-[600px] w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white py-16 px-6 md:px-12">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 items-center gap-10">
+          {/* Right Section - Text */}
           <motion.div
-            key={currentSlide}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1.5, ease: "easeInOut" }}
-            className="absolute inset-0 w-full h-full"
-            style={{
-              backgroundImage: `${slides[currentSlide].overlay}, url(${slides[currentSlide].image})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }}
-          />
-        </AnimatePresence>
-
-        <div className="absolute inset-0 flex items-center justify-center z-10 px-4">
-          <div className="max-w-4xl text-center">
-            <motion.h1
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3, duration: 0.8, ease: "easeOut" }}
-              className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="space-y-6"
+          >
+            <h1 className="text-4xl md:text-5xl font-bold leading-snug">
+              کرایه موتر آسان،{" "}
+              <span className="text-amber-400">با کیفیت بلند</span>
+            </h1>
+            <p className="text-lg text-gray-300 leading-relaxed">
+              بهترین موترها برای سفر، مراسم عروسی، و سفرهای کاری شما. با قیمت
+              مناسب و خدمات سریع در خدمت شما هستیم.
+            </p>
+            <motion.a
+              href="#booking"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="inline-block px-8 py-4 bg-amber-400 text-gray-900 font-semibold rounded-full shadow-lg hover:bg-amber-300 transition-all duration-300"
             >
-              Seconde main,{" "}
-              <span className="text-amber-400">première classe</span> style
-            </motion.h1>
+              همین حالا رزرو کنید
+            </motion.a>
+          </motion.div>
 
-            <motion.p
-              initial={{ y: 30, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.6, duration: 0.8, ease: "easeOut" }}
-              className="text-xl md:text-2xl text-white/90 max-w-2xl mx-auto mb-10"
-            >
-              Découvrez une sélection de pièces vintage et d'occasion choisies
-              avec soin pour créer une garde-robe qui vous ressemble et respecte
-              la planète.
-            </motion.p>
-
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.9, duration: 0.5, ease: "easeOut" }}
-            >
-              <a
-                href="#product-grid"
-                className="inline-flex items-center px-8 py-4 bg-[#3caca8] text-gray-900 font-medium rounded-full hover:bg-gray-100 transition-all duration-300 group"
-              >
-                Acheter les nouveautés
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M14 5l7 7m0 0l-7 7m7-7H3"
-                  />
-                </svg>
-              </a>
-            </motion.div>
-          </div>
-        </div>
-
-        <div className="absolute bottom-8 left-0 right-0 z-10">
-          <div className="flex justify-center gap-3">
-            {slides.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentSlide(index)}
-                className={`h-1.5 w-8 rounded-full transition-all duration-500 ${
-                  index === currentSlide ? "bg-white w-12" : "bg-white/40"
-                }`}
-                aria-label={`Go to slide ${index + 1}`}
-              />
-            ))}
-          </div>
+          {/* Left Section - Image */}
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="flex justify-center"
+          >
+            <img
+              src="banner2.png"
+              alt="موتر کرایه"
+              className=" max-h-[450px] object-cover"
+            />
+          </motion.div>
         </div>
       </div>
-
+      <WhyChooseUs />
+      <Services />
+      <HowToGetStarted />
       {/* 
         ========================================================================
         THE FIX: Step 3 - Attach the ref to the container of the ProductListPage.
         ========================================================================
       */}
-      <div id="product-grid" ref={productListRef}>
+      {/* <div id="product-grid" ref={productListRef}>
         <ProductListPage {...props} />
-      </div>
+      </div> */}
     </div>
   );
 };

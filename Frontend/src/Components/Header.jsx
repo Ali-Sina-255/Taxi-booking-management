@@ -5,61 +5,29 @@ import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useSelector } from "react-redux";
-import MegaMenu from "./MegaMenu";
 import SearchBar from "./SearchBar";
 import MobileMenu from "./MobileMenu";
 import logo from "../../public/44.png";
+import { FaTaxi } from "react-icons/fa";
 const navbarItems = [
-  { name: "Accueil", path: "/" }, // Home
-  { name: "Catégorie", path: "" }, // Category
-  { name: "Contactez-nous", path: "/contact" }, // Contact Us
-  { name: "À propos de nous", path: "/about" }, // About Us
+  { name: "صفحه اصلی", path: "/" }, // Home
+  { name: "شهر ها", path: "/city" }, // Category
+  { name: "نماس با ما", path: "/contact" }, // Contact Us
+  { name: "درباره ما", path: "/about" }, // About Us
 ];
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || "http://127.0.0.1:8000";
-const Header = ({
-  wishlistCount,
-  searchQuery,
-  setSearchQuery,
-  onCartClick,
-  cartRef,
-}) => {
+const Header = ({ searchQuery, setSearchQuery }) => {
   const { cartItems } = useSelector((state) => state.user);
   const cartCount = (cartItems || []).reduce((sum, item) => sum + item.qty, 0);
-  const [isShopMenuOpen, setShopMenuOpen] = useState(false);
+
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileCategoryOpen, setIsMobileCategoryOpen] = useState(false);
-  const [categories, setCategories] = useState([]);
-  const [categoryLoading, setCategoryLoading] = useState(true);
-  const [categoryError, setCategoryError] = useState(null);
-
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setCategoryLoading(true);
-        const response = await axios.get(`${BASE_URL}/api/v1/category/`);
-        if (response.data && Array.isArray(response.data.results)) {
-          setCategories(response.data.results);
-        } else if (Array.isArray(response.data)) {
-          setCategories(response.data);
-        } else {
-          throw new Error("Invalid category format");
-        }
-      } catch (err) {
-        setCategoryError("Failed to load categories.");
-        toast.error("Failed to load categories.");
-      } finally {
-        setCategoryLoading(false);
-      }
-    };
-    fetchCategories();
   }, []);
 
   return (
@@ -82,50 +50,31 @@ const Header = ({
               </button>
             </div>
 
-            <div className="items-center hidden md:flex">
-              <Link to="/" className="flex items-center">
-                {/* Replaced text with logo */}
-                <img
-                  src={logo}
-                  alt="Website Logo"
-                  className="h-12  w-auto" // Adjust height as needed
-                />
-              </Link>
-            </div>
+            <div className="flex items-center gap-x-10">
+              <div className="items-center hidden md:flex">
+                <Link to="/" className="flex items-center gap-x-3">
+                  {/* Replaced text with logo */}
+                  <FaTaxi className="text-2xl " />
+                  <p className="text-2xl font-bold">کابل سنپ</p>
+                </Link>
+              </div>
 
-            <div className="hidden lg:flex lg:items-center lg:space-x-8 relative">
-              {navbarItems.map((item, index) => {
-                const isCategory = item.name === "Catégorie";
-                return (
-                  <div
-                    key={index}
-                    onMouseEnter={() => isCategory && setShopMenuOpen(true)}
-                    onMouseLeave={() => isCategory && setShopMenuOpen(false)}
-                    className="relative"
-                  >
-                    <Link
-                      to={item.path}
-                      className={`text-sm font-medium ${
-                        isScrolled ? "text-indigo-800" : "text-indigo-900"
-                      } hover:text-primary transition-colors duration-200`}
-                    >
-                      {item.name}
-                    </Link>
-                    {isCategory && (
-                      <AnimatePresence>
-                        {isShopMenuOpen && (
-                          <div
-                            onMouseEnter={() => setShopMenuOpen(true)}
-                            onMouseLeave={() => setShopMenuOpen(false)}
-                          >
-                            <MegaMenu onClose={() => setShopMenuOpen(false)} />
-                          </div>
-                        )}
-                      </AnimatePresence>
-                    )}
-                  </div>
-                );
-              })}
+              <div className="hidden lg:flex lg:items-center gap-x-6 ">
+                {navbarItems.map((item, index) => {
+                  return (
+                    <div key={index} className="">
+                      <Link
+                        to={item.path}
+                        className={`text-lg font-medium ${
+                          isScrolled ? "text-indigo-800" : "text-indigo-900"
+                        } hover:text-primary transition-colors duration-200`}
+                      >
+                        {item.name}
+                      </Link>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="flex items-center justify-end gap-x-4">
@@ -139,31 +88,7 @@ const Header = ({
               >
                 <User size={24} />
               </Link>
-              <Link
-                to="/wishlist"
-                onClick={() => scrollTo(0, 0)}
-                className="flex items-center p-2 text-primary transition-colors duration-200"
-              >
-                <Heart size={24} />
-                {wishlistCount > 0 && (
-                  <span className="ml-2 text-xs font-semibold text-white bg-gradient-to-r from-red-500 to-pink-500 rounded-full h-5 w-5 flex items-center justify-center">
-                    {wishlistCount}
-                  </span>
-                )}
-              </Link>
-              <button
-                ref={cartRef}
-                type="button"
-                onClick={onCartClick}
-                className="flex items-center p-2 text-primary transition-colors duration-200"
-              >
-                <ShoppingBag size={24} />
-                {cartCount > 0 && (
-                  <span className="ml-2 text-xs font-semibold text-white bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full h-5 w-5 flex items-center justify-center">
-                    {cartCount}
-                  </span>
-                )}
-              </button>
+              <button className="border py-2 px-4 rounded-md font-semibold">درخواست تاکسی</button>
             </div>
           </div>
         </nav>
@@ -176,9 +101,6 @@ const Header = ({
             navbarItems={navbarItems}
             isMobileCategoryOpen={isMobileCategoryOpen}
             setIsMobileCategoryOpen={setIsMobileCategoryOpen}
-            categories={categories}
-            categoryLoading={categoryLoading}
-            categoryError={categoryError}
           />
         )}
       </AnimatePresence>

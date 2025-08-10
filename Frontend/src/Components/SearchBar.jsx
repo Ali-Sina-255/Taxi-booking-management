@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FiSearch } from "react-icons/fi";
-import { X } from "lucide-react"; // Import the X icon for the clear button
+import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { FaTaxi } from "react-icons/fa";
 
 const SearchBar = ({ searchQuery, setSearchQuery }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -11,7 +12,6 @@ const SearchBar = ({ searchQuery, setSearchQuery }) => {
   const modalRef = useRef(null);
   const navigate = useNavigate();
 
-  // No changes to the core search logic
   useEffect(() => {
     const handler = setTimeout(() => {
       if (inputValue !== searchQuery) {
@@ -41,7 +41,7 @@ const SearchBar = ({ searchQuery, setSearchQuery }) => {
   const handleSearchClick = () => setIsExpanded(true);
   const handleCancelClick = () => {
     setIsExpanded(false);
-    setInputValue(searchQuery); // Reset to the active search query on cancel
+    setInputValue(searchQuery);
   };
   const handleClearInput = () => setInputValue("");
 
@@ -81,25 +81,25 @@ const SearchBar = ({ searchQuery, setSearchQuery }) => {
   }, [isExpanded]);
 
   const constantItems = [
-    "Nike",
-    "air max",
-    "killshot",
-    "jordan",
-    "converse",
-    "vans",
+    "تویوتا کرولا",
+    "موتر شاسی بلند",
+    "موتر لوکس",
+    "کرایه برای عروسی",
+    "کرایه روزانه",
+    "انتقال از میدان هوایی",
   ];
+
   const backdropVariants = { hidden: { opacity: 0 }, visible: { opacity: 1 } };
 
   return (
     <div className={`relative ${isExpanded ? "w-full" : ""}`}>
-      {/* This is your original compact search bar - unchanged */}
       <div
         className="flex items-center gap-2 bg-white border hover:bg-gray-300 rounded-full px-1.5 md:px-4 py-1.5 transition-all duration-300 cursor-pointer"
         onClick={handleSearchClick}
       >
         <FiSearch size={24} className="text-primary" />
         <span className="hidden md:block bg-transparent outline-none w-32 text-gray-500 text-sm truncate">
-          {searchQuery || "Rechercher..."}
+          {searchQuery || "جستجوی موتر یا محل..."}
         </span>
       </div>
 
@@ -114,7 +114,6 @@ const SearchBar = ({ searchQuery, setSearchQuery }) => {
               exit="hidden"
               onClick={handleCancelClick}
             />
-            {/* This is your original modal structure - unchanged */}
             <motion.div
               ref={modalRef}
               className="fixed top-0 left-0 right-0 px-8 pb-20 py-3 bg-white w-full z-40"
@@ -125,21 +124,20 @@ const SearchBar = ({ searchQuery, setSearchQuery }) => {
             >
               <div className="md:flex justify-between items-center border-gray-200 px-4">
                 <div className="flex items-center justify-between gap-x-1 mb-3 md:mb-0">
-                  {/* Your website name is preserved */}
-                  <div className="flex items-center gap-x-4">
-                    <img src="44.png" alt="logo" className="h-10" />
-                    <p className="text-xl font-semibold ">Chiq Frip</p>
+                  <div to="/" className="flex items-center gap-x-3">
+                    {/* Replaced text with logo */}
+                    <FaTaxi className="text-2xl " />
+                    <p className="text-2xl font-bold">کابل سنپ</p>
                   </div>
                   <button
                     onClick={handleCancelClick}
                     className="md:hidden py-2 text-gray-800 font-semibold hover:text-gray-500 text-lg transition"
                   >
-                    Annuler
+                    لغو
                   </button>
                 </div>
                 <form
                   onSubmit={handleSearchSubmit}
-                  // THE FIX: Added 'relative' to position the clear button
                   className="relative flex items-center gap-2 hover:bg-gray-300 bg-gray-200 border rounded-full px-4 py-2 transition-all duration-300"
                 >
                   <FiSearch
@@ -150,11 +148,10 @@ const SearchBar = ({ searchQuery, setSearchQuery }) => {
                     type="text"
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    placeholder="Rechercher des produits, des marques et des tags..."
+                    placeholder="موتر، مدل یا محل کرایه را جستجو کنید..."
                     className="flex bg-transparent w-[800px] outline-none text-gray-800"
                     autoFocus
                   />
-                  {/* THE FIX: Added the clear button, which only appears when there is text */}
                   {inputValue && (
                     <button
                       type="button"
@@ -169,19 +166,18 @@ const SearchBar = ({ searchQuery, setSearchQuery }) => {
                   onClick={handleCancelClick}
                   className="hidden md:block py-2 text-gray-800 font-semibold hover:text-gray-500 text-lg transition"
                 >
-                  Annuler
+                  لغو
                 </button>
               </div>
-              {/* This is your original suggestions layout - unchanged */}
+
               <div className="md:w-[850px] mx-auto mt-6">
                 <h4 className="text-gray-500 text-md font-semibold p-4">
-                  Termes de recherche populaires
+                  جستجوهای محبوب
                 </h4>
                 <ul className="flex items-center flex-wrap gap-4 mb-4 px-4">
                   {constantItems.map((item, index) => (
                     <li
                       key={index}
-                      // THE FIX: Added onClick to make suggestions interactive
                       onClick={() => handleSuggestionClick(item)}
                       className="text-black text-base py-1.5 hover:bg-gray-300 px-5 rounded-full bg-gray-200 cursor-pointer"
                     >
@@ -192,7 +188,7 @@ const SearchBar = ({ searchQuery, setSearchQuery }) => {
                 {recentSearches.length > 0 && (
                   <>
                     <h4 className="text-gray-500 text-md font-semibold p-4">
-                      Recherches récentes
+                      جستجوهای اخیر
                     </h4>
                     <ul className="flex items-center flex-wrap gap-4 mb-4 px-4">
                       {recentSearches.map((item, index) => (
