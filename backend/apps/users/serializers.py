@@ -43,18 +43,9 @@ class UserSerializer(serializers.ModelSerializer):
         if instance.is_superuser:
             representation["admin"] = True
         return representation
-
-
 class CustomRegisterSerializer(serializers.ModelSerializer):
-    role = serializers.ChoiceField(
-        choices=User.Role.choices,
-    )
-    username = serializers.CharField(required=True)
-    first_name = serializers.CharField(required=True)
-    last_name = serializers.CharField(required=True)
-    email = serializers.EmailField(required=True)
-    password1 = serializers.CharField(write_only=True)
-    password2 = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True, required=True, min_length=8)
+    password2 = serializers.CharField(write_only=True, required=True, label="Confirm Password")
 
     class Meta:
         model = User
@@ -64,27 +55,43 @@ class CustomRegisterSerializer(serializers.ModelSerializer):
             "last_name",
             "email",
             "role",
-            "password1",
+            "password",
             "password2",
         ]
+        # Make sure the 'role' field is included as it is required by the frontend
+        extra_kwargs = {
+            'role': {'required': True}
+        }
 
     def validate(self, attrs):
-        if attrs.get("password1") != attrs.get("password2"):
+        """
+        Validate that the user doesn't already exist and that passwords match.
+        """
+        # Check if email exists
+        if User.objects.filter(email=attrs["email"]).exists():
+            raise serializers.ValidationError({"email": "A user with this email address already exists."})
+
+        # Check if username exists
+        if User.objects.filter(username=attrs["username"]).exists():
+            raise serializers.ValidationError({"username": "This username is already taken. Please choose another."})
+
+        # Check if passwords match
+        if attrs["password"] != attrs["password2"]:
             raise serializers.ValidationError({"password": "Passwords must match."})
+
         return attrs
 
-    def save(self, request=None, **kwargs):
-        user = User.objects.create(
-            username=self.validated_data["username"],
-            email=self.validated_data["email"],
-            first_name=self.validated_data["first_name"],
-            last_name=self.validated_data["last_name"],
-            is_active=True,
-        )
-        user.set_password(self.validated_data["password1"])
-        user.save()
+    def create(self, validated_data):
+        """
+        Create and return a new user instance, given the validated data.
+        """
+        # Remove the confirmation password as it's not part of the User model
+        validated_data.pop('password2')
+        
+        # Use the custom manager's create_user method which correctly handles password hashing
+        user = User.objects.create_user(**validated_data)
+        
         return user
-
 
 class PasswordChangeSerializer(serializers.Serializer):
     otp = serializers.CharField(max_length=10)

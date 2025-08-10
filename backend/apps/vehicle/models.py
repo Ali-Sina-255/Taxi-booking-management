@@ -86,9 +86,6 @@ class Route(TimeStampedModel):
         return f"{self.pickup} ➜ {self.drop} - {self.price_af} AF"
 
 
-# ----------------------------
-# TRIP MODEL
-# ----------------------------
 
 
 class Trip(TimeStampedModel):

@@ -29,14 +29,11 @@ class CustomUserDetailsView(generics.RetrieveUpdateAPIView):
         return get_user_model().objects.none()
 
 
-class UserRegisterAPIView(generics.ListCreateAPIView):
-    queryset = User.objects.all()
+# THIS IS THE CORRECT CODE
+class UserRegisterAPIView(generics.CreateAPIView):
+    queryset = User.objects.none()
     serializer_class = CustomRegisterSerializer
-    # permission_classes = [IsAuthenticated]
-
-    def perform_create(self, serializer):
-        serializer.save(request=self.request)
-
+    permission_classes = [AllowAny]
 
 def generate_random_opt_code(length=8):
     otp = "".join([str(random.randint(0, 9)) for _ in range(length)])

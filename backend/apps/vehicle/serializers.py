@@ -20,7 +20,7 @@ class VehicleSerializer(serializers.ModelSerializer):
             "license",
             "type",
         ]
-        read_only_fields = ["driver_name"]
+        read_only_fields = ["driver", "driver_name"]
 
 
 class LocationSerializer(serializers.ModelSerializer):
