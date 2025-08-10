@@ -12,6 +12,7 @@ class VehicleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Vehicle
         fields = [
+            "pk",
             "id",
             "driver",
             "driver_name",
@@ -20,7 +21,7 @@ class VehicleSerializer(serializers.ModelSerializer):
             "license",
             "type",
         ]
-        read_only_fields = ["driver", "driver_name"]
+        read_only_fields = ["driver_name"]
 
 
 class LocationSerializer(serializers.ModelSerializer):
@@ -52,6 +53,8 @@ class RouteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Route
         fields = [
+
+            "pk", 
             "id",
             "pickup",
             "drop",
@@ -71,6 +74,7 @@ class TripRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Trip
         fields = [
+
             "id",
             "route_id",
             "distance_km",
@@ -103,6 +107,7 @@ class DriverTripSerializer(serializers.ModelSerializer):
     class Meta:
         model = Trip
         fields = [
+            "pk",
             "id",
             "passenger_name",
             "pickup",

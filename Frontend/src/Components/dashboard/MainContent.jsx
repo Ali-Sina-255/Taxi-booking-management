@@ -5,7 +5,9 @@ import { useSelector } from "react-redux";
 import Profile from "../../Pages/dashboard/Profiles.jsx";
 import VehicleManagement from "./pages/VehicleManagement.jsx";
 import LocationManagement from "./pages/LocationManagement.jsx";
-import RouteManagement from "./pages/RouteManagement.jsx"; // <-- 1. IMPORT
+import RouteManagement from "./pages/RouteManagement.jsx";
+import RequestTrip from "./pages/RequestTrip.jsx";
+import MyTrips from "./pages/MyTrips.jsx"; // <-- 1. IMPORT
 
 const Placeholder = ({ title }) => (
   <div className="p-8">
@@ -24,7 +26,7 @@ const MainContent = ({ activeComponent }) => {
       case "driver":
         return <VehicleManagement />;
       case "passenger":
-        return <Placeholder title="Request a Trip" />;
+        return <RequestTrip />;
       default:
         return <Placeholder title="Dashboard" />;
     }
@@ -37,7 +39,6 @@ const MainContent = ({ activeComponent }) => {
         return <Placeholder title="Admin Dashboard" />;
       case "locations":
         return <LocationManagement />;
-      // --- 2. RENDER THE NEW COMPONENT ---
       case "routes":
         return <RouteManagement />;
 
@@ -49,9 +50,10 @@ const MainContent = ({ activeComponent }) => {
 
       // Passenger
       case "request-trip":
-        return <Placeholder title="Request a New Trip" />;
+        return <RequestTrip />;
+      // --- 2. RENDER THE NEW COMPONENT ---
       case "my-trips":
-        return <Placeholder title="My Trip History" />;
+        return <MyTrips />;
 
       // Common
       case "profile":
