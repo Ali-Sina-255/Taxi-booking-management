@@ -78,9 +78,13 @@ class Route(TimeStampedModel):
     )
 
     class Meta:
-        unique_together = ("pickup", "drop")
         verbose_name = "Route"
         verbose_name_plural = "Routes"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["pickup", "drop"], name="unique_pickup_drop"
+            )
+        ]
 
     def __str__(self):
         return f"{self.pickup} ➜ {self.drop} - {self.price_af} AF"
@@ -136,8 +140,6 @@ class Trip(TimeStampedModel):
         # Auto-set fare if not manually set
         if not self.fare and self.route:
             self.fare = self.route.price_af
-
-        # Auto-assign driver and vehicle if not manually set
         if not self.driver:
             self.driver = self.route.drivers.first()
 

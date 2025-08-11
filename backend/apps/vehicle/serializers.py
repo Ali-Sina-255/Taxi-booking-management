@@ -30,37 +30,49 @@ class LocationSerializer(serializers.ModelSerializer):
 
 
 class RouteSerializer(serializers.ModelSerializer):
-    pickup = LocationSerializer(read_only=True)
-    drop = LocationSerializer(read_only=True)
-    pickup_id = serializers.PrimaryKeyRelatedField(
-        queryset=Location.objects.all(), source="pickup", write_only=True
-    )
-    drop_id = serializers.PrimaryKeyRelatedField(
-        queryset=Location.objects.all(), source="drop", write_only=True
-    )
-    drivers = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=User.objects.filter(role="driver"),
-        required=False,
-    )
-    vehicles = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=Vehicle.objects.all(),
-        required=False,
-    )
-
     class Meta:
         model = Route
-        fields = [
-            "id",
-            "pickup",
-            "drop",
-            "pickup_id",
-            "drop_id",
-            "price_af",
-            "drivers",
-            "vehicles",
-        ]
+        fields = "__all__"
+        # Prevent DRF from automatically adding UniqueTogetherValidator
+        validators = []
+
+    def validate(self, attrs):
+        pickup = attrs.get("pickup")
+        drop = attrs.get("drop")
+
+        qs = Route.objects.filter(pickup=pickup, drop=drop)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+
+        if qs.exists():
+            raise serializers.ValidationError(
+                {"non_field_errors": ["This route already exists."]}
+            )
+
+        return attrs
+
+    def create(self, validated_data):
+        drivers = validated_data.pop("drivers", [])
+        vehicles = validated_data.pop("vehicles", [])
+
+        route = super().create(validated_data)
+        route.drivers.set(drivers)
+        route.vehicles.set(vehicles)
+        return route
+
+    def update(self, instance, validated_data):
+        drivers = validated_data.pop("drivers", None)
+        vehicles = validated_data.pop("vehicles", None)
+
+        instance = super().update(instance, validated_data)
+
+        if drivers is not None:
+            instance.drivers.set(drivers)
+
+        if vehicles is not None:
+            instance.vehicles.set(vehicles)
+
+        return instance
 
 
 class TripRequestSerializer(serializers.ModelSerializer):
