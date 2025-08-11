@@ -135,7 +135,10 @@ export const signIn = createAsyncThunk(
       // --- UPDATE: Unwrap the nested profile object here.
       // This makes the payload sent to the reducer much cleaner and simpler to use.
       const profileData = profileResponse.data.profile;
-
+        const userPkid = profileData.user_pkid;
+      if (!userPkid) {
+        throw new Error("User PKID not found in profile response. Check the ProfileSerializer.");
+      }
       // This line remains unchanged
       dispatch(fetchUserCart());
       toast.success("Login successful!");
@@ -145,6 +148,7 @@ export const signIn = createAsyncThunk(
         accessToken: access,
         refreshToken: refresh,
         profile: profileData,
+        pkid: userPkid,
       };
     } catch (error) {
       const message = getErrorMessage(error);
@@ -252,6 +256,7 @@ const userSlice = createSlice({
         state.currentUser = {
           id: action.payload.profile.user_pk, // Use the user's integer PK
           email: action.payload.profile.email,
+          pkid: action.payload.pkid,
           fullName: action.payload.profile.full_name,
           role: action.payload.profile.role,
         };
