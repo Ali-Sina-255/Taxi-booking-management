@@ -33,7 +33,7 @@
 }
 
 body {
-  font-family: "Vazirmatn", Arial, sans-serif;
+  font-family: "Ray_text", Arial, sans-serif;
 }
 @layer components {
   .primary-btn {

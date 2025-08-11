@@ -30,7 +30,7 @@ const servicesData = [
 
 const Services = () => {
   return (
-    <section dir="rtl" className="bg-gray-50 py-16">
+    <section className="bg-gray-50 py-16">
       <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12">
@@ -41,7 +41,7 @@ const Services = () => {
               برای شما فراهم است.
             </p>
           </div>
-          <button className="bg-amber-500 hover:bg-amber-600 text-white px-6 py-3 rounded-lg flex items-center gap-2 mt-6 md:mt-0 transition">
+          <button className="bg-primary hover:bg-primary/50 text-white px-6 py-3 rounded-lg flex items-center gap-2 mt-6 md:mt-0 transition">
             دریافت خدمات
             <ArrowLeftIcon className="w-5 h-5" />
           </button>
@@ -55,7 +55,7 @@ const Services = () => {
               className="bg-white rounded-xl shadow-sm hover:shadow-md transition border border-gray-200 p-6 flex flex-col md:flex-row items-center md:items-center gap-6"
             >
               {/* Icon */}
-              <div className="flex-shrink-0 w-16 h-16 bg-amber-500 rounded-full flex items-center justify-center">
+              <div className="flex-shrink-0 w-16 h-16 bg-primary rounded-full flex items-center justify-center">
                 <img
                   src={service.icon}
                   alt={service.title}
@@ -71,9 +71,9 @@ const Services = () => {
 
               {/* Button */}
               <div className="flex-shrink-0">
-                <button className="bg-black hover:bg-gray-900 text-white px-5 py-2 rounded-lg flex items-center gap-2">
-                  مشاهده جزئیات
+                <button className="bg-primary hover:bg-primary/50 text-white px-5 py-2 rounded-lg flex items-center gap-2">
                   <ArrowRightIcon className="w-4 h-4" />
+                  مشاهده جزئیات
                 </button>
               </div>
 
