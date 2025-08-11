@@ -73,45 +73,41 @@ const HomePage = (props) => {
 
   return (
     <div className="relative">
-      <div className="relative h-[600px] w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white py-16 px-6 md:px-12">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 items-center gap-10">
-          {/* Right Section - Text */}
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="space-y-6"
-          >
-            <h1 className="text-4xl md:text-5xl font-bold leading-snug">
-              کرایه موتر آسان،{" "}
-              <span className="text-amber-400">با کیفیت بلند</span>
-            </h1>
-            <p className="text-lg text-gray-300 leading-relaxed">
-              بهترین موترها برای سفر، مراسم عروسی، و سفرهای کاری شما. با قیمت
-              مناسب و خدمات سریع در خدمت شما هستیم.
-            </p>
-            <motion.a
-              href="#booking"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="inline-block px-8 py-4 bg-amber-400 text-gray-900 font-semibold rounded-full shadow-lg hover:bg-amber-300 transition-all duration-300"
-            >
-              همین حالا رزرو کنید
-            </motion.a>
-          </motion.div>
-
+      <div className="relative h-[600px] w-full bg-[#B8D5B7] text-white py-16 px-6 md:px-12">
+        <div className="max-w-[95%] mx-auto grid grid-cols-1 pt-12 md:grid-cols-3 items-center gap-10">
           {/* Left Section - Image */}
           <motion.div
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="flex justify-center"
+            className="flex justify-center col-span-2"
           >
             <img
-              src="banner2.png"
+              src="corrolla.png"
               alt="موتر کرایه"
-              className=" max-h-[450px] object-cover"
+              className=" max-h-[550px] min-h-max object-cover"
             />
+          </motion.div>
+          {/* Right Section - Text */}
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="space-y-6 col-span-1 pt-16"
+          >
+            <h1 className="text-4xl md:text-6xl tracking-tighter font-Ray_black text-black">
+              سفر سریع , راحت و امن
+            </h1>
+            <p className="text-black text-xl ">با ما تجربه متفاوت  از سفر شهری داشته باشید.</p>
+
+            <motion.a
+              href="#booking"
+              // whileHover={{ scale: 1.05 }}
+              // whileTap={{ scale: 0.95 }}
+              className="inline-block px-8 py-4 bg-primary text-white font-semibold rounded-md text-lg shadow-lg hover:bg-primary/50 transition-all duration-300"
+            >
+              همین حالا  ثبت نام کنید
+            </motion.a>
           </motion.div>
         </div>
       </div>

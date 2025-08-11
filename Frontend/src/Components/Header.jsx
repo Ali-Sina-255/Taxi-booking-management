@@ -12,7 +12,7 @@ import { FaTaxi } from "react-icons/fa";
 const navbarItems = [
   { name: "صفحه اصلی", path: "/" }, // Home
   { name: "شهر ها", path: "/city" }, // Category
-  { name: "نماس با ما", path: "/contact" }, // Contact Us
+  { name: "تماس با ما", path: "/contact" }, // Contact Us
   { name: "درباره ما", path: "/about" }, // About Us
 ];
 
@@ -33,10 +33,10 @@ const Header = ({ searchQuery, setSearchQuery }) => {
   return (
     <>
       <header
-        className={`sticky top-0 z-30 transition-all duration-300 ${
+        className={`sticky top-0 z-30 bg-primary transition-all duration-300 ${
           isScrolled
-            ? "bg-white/80 backdrop-blur-lg border-indigo-100 shadow-sm"
-            : "bg-gradient-to-r from-indigo-50 via-white to-blue-50 backdrop-blur-sm border-indigo-100"
+            ? ""
+            : "bg-primary"
         }`}
       >
         <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -53,9 +53,7 @@ const Header = ({ searchQuery, setSearchQuery }) => {
             <div className="flex items-center gap-x-10">
               <div className="items-center hidden md:flex">
                 <Link to="/" className="flex items-center gap-x-3">
-                  {/* Replaced text with logo */}
-                  <FaTaxi className="text-2xl " />
-                  <p className="text-2xl font-bold">کابل سنپ</p>
+                  <p className="text-3xl font-Ray_black text-white "> YouRIDe</p>
                 </Link>
               </div>
 
@@ -66,8 +64,8 @@ const Header = ({ searchQuery, setSearchQuery }) => {
                       <Link
                         to={item.path}
                         className={`text-lg font-medium ${
-                          isScrolled ? "text-indigo-800" : "text-indigo-900"
-                        } hover:text-primary transition-colors duration-200`}
+                          isScrolled ? "text-white" : "text-white"
+                        } hover:text-white/50 transition-colors duration-200`}
                       >
                         {item.name}
                       </Link>
@@ -84,11 +82,13 @@ const Header = ({ searchQuery, setSearchQuery }) => {
               />
               <Link
                 to="/account"
-                className="p-2 text-primary hidden lg:block transition-colors duration-200"
+                className="p-2 text-white border rounded-full hidden lg:block transition-colors duration-200"
               >
                 <User size={24} />
               </Link>
-              <button className="border py-2 px-4 rounded-md font-semibold">درخواست تاکسی</button>
+              <button className="border py-2 px-4 text-white rounded-md font-semibold">
+                درخواست تاکسی
+              </button>
             </div>
           </div>
         </nav>

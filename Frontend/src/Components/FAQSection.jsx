@@ -3,24 +3,24 @@ import { FaPlus, FaMinus } from "react-icons/fa";
 
 const faqItems = [
   {
-    question: "Combien de temps prend la livraison ?",
+    question: "چطور می‌توانم موتر کرایه کنم؟",
     answer:
-      "La livraison standard prend de 3 à 5 jours ouvrables. Des options express sont disponibles lors du paiement.",
+      "شما می‌توانید از طریق وبسایت ما موتر دلخواه‌تان را انتخاب کرده و فورم آنلاین را خانه‌پری کنید، یا با شماره تماس ما تماس بگیرید.",
   },
   {
-    question: "Quelle est votre politique de retour ?",
+    question: "آیا می‌توانم موتر را با راننده کرایه کنم؟",
     answer:
-      "Nous offrons un retour sous 30 jours pour les articles non utilisés avec les étiquettes d'origine. Les articles en vente finale ne peuvent pas être retournés.",
+      "بلی، ما خدمات کرایه موتر با راننده را نیز ارائه می‌کنیم. هزینه آن بسته به نوع موتر و مدت زمان کرایه متفاوت است.",
   },
   {
-    question: "Comment suivre ma commande ?",
+    question: "مدارک لازم برای کرایه موتر چیست؟",
     answer:
-      "Vous recevrez un numéro de suivi par e-mail une fois votre commande expédiée. Vous pouvez également vérifier dans le tableau de bord de votre compte.",
+      "برای کرایه موتر، شما نیاز به تذکره یا پاسپورت معتبر و گواهینامه رانندگی دارید. در برخی موارد، ضمانت نقدی نیز لازم است.",
   },
   {
-    question: "Proposez-vous la livraison internationale ?",
+    question: "آیا موترها بیمه دارند؟",
     answer:
-      "Oui ! Nous livrons dans plus de 50 pays dans le monde. Les frais de livraison varient selon la destination.",
+      "بلی، تمام موترهای ما تحت پوشش بیمه می‌باشند. جزئیات بیمه هنگام قرارداد به شما توضیح داده می‌شود.",
   },
 ];
 
@@ -47,13 +47,13 @@ const FAQSection = () => {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-semibold text-indigo-900 mb-4">
-        Questions fréquemment posées
+        سوالات متداول
       </h2>
       {faqItems.map((item, index) => (
         <div key={index} className="border-b border-gray-200 pb-4">
           <button
             onClick={() => toggleIndex(index)}
-            className="flex justify-between items-center w-full text-left"
+            className="flex justify-between items-center w-full text-right"
           >
             <h3 className="text-base font-semibold text-gray-900">
               {item.question}

@@ -34,7 +34,7 @@ const WhyChooseUs = () => {
         <div>
           <h2 className="text-4xl font-bold mb-4">
             چرا{" "}
-            <span className="text-amber-500 relative inline-block">
+            <span className="text-primary relative inline-block">
               ما را انتخاب کنید؟
               {/* <span className="absolute left-0 right-0 -bottom-1 h-3 bg-amber-200 opacity-60 rounded-full"></span> */}
             </span>
@@ -51,7 +51,7 @@ const WhyChooseUs = () => {
                 key={index}
                 className="flex items-center gap-3 px-4 py-3 bg-gray-100 rounded-lg shadow-sm hover:shadow-md transition"
               >
-                <CheckCircleIcon className="w-5 h-5 text-amber-500" />
+                <CheckCircleIcon className="w-5 h-5 text-primary" />
                 <span>{feature}</span>
               </div>
             ))}

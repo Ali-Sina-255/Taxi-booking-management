@@ -32,7 +32,7 @@ const HowToGetStarted = () => {
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold">
             چگونه{" "}
-            <span className="text-amber-500 relative inline-block">
+            <span className="text-primary relative inline-block">
               شروع کنید
               <span className="absolute -bottom-1 left-0 w-full h-2 bg-yellow-200 -z-10"></span>
             </span>
@@ -47,10 +47,10 @@ const HowToGetStarted = () => {
           {steps.map((step, index) => (
             <div
               key={step.id}
-              className="relative bg-amber-50 p-6 rounded-lg text-center"
+              className="relative bg-secondary p-6 rounded-lg text-center"
             >
               {/* Step Number */}
-              <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-amber-500 text-white font-bold py-2 px-4 rounded-t-lg">
+              <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-primary text-white font-bold py-2 px-4 rounded-t-lg">
                 {step.id}
               </div>
 
