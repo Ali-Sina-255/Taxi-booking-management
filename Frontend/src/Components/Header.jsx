@@ -7,7 +7,7 @@ import { toast } from "react-hot-toast";
 import { useSelector } from "react-redux";
 import SearchBar from "./SearchBar";
 import MobileMenu from "./MobileMenu";
-import logo from "../../public/44.png";
+
 import { FaTaxi } from "react-icons/fa";
 const navbarItems = [
   { name: "صفحه اصلی", path: "/" }, // Home
