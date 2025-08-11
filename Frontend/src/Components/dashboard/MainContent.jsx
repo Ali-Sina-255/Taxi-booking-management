@@ -3,30 +3,41 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import Profile from "../../Pages/dashboard/Profiles.jsx";
+
+// --- IMPORT THE NEW MANAGEMENT PAGES ---
 import VehicleManagement from "./pages/VehicleManagement.jsx";
 import LocationManagement from "./pages/LocationManagement.jsx";
 import RouteManagement from "./pages/RouteManagement.jsx";
 import RequestTrip from "./pages/RequestTrip.jsx";
-import MyTrips from "./pages/MyTrips.jsx"; // <-- 1. IMPORT
+import MyTrips from "./pages/MyTrips.jsx";
+import DriverTripList from "./pages/DriverTripList.jsx";
+import AdminTripManagement from "./pages/AdminTripManagement.jsx";
 
+// A simple placeholder for components we haven't built yet
 const Placeholder = ({ title }) => (
   <div className="p-8">
     <h1 className="text-3xl font-bold">{title}</h1>
-    <p className="mt-4 text-gray-600">This page is under construction.</p>
   </div>
 );
 
 const MainContent = ({ activeComponent }) => {
   const { profile } = useSelector((state) => state.user);
 
+  // --- THIS IS THE FIX ---
+  // We must define the 'isAdmin' constant so we can use it below.
+  const isAdmin = profile?.role === "admin";
+  // --- END OF FIX ---
+
+  // Set a default view based on the user's role
   const getDefaultComponent = () => {
     switch (profile?.role) {
       case "admin":
-        return <Placeholder title="Admin Dashboard" />;
+        // Admins should see the trip management page by default
+        return <AdminTripManagement />;
       case "driver":
-        return <VehicleManagement />;
+        return <DriverTripList />; // Default for drivers is to see trip requests
       case "passenger":
-        return <RequestTrip />;
+        return <RequestTrip />; // Default for passengers
       default:
         return <Placeholder title="Dashboard" />;
     }
@@ -34,28 +45,31 @@ const MainContent = ({ activeComponent }) => {
 
   const renderContent = () => {
     switch (activeComponent) {
-      // Admin
+      // Admin Pages
       case "dashboard":
-        return <Placeholder title="Admin Dashboard" />;
+        return <AdminTripManagement />; // Changed default to be more useful
       case "locations":
-        return <LocationManagement />;
+        return isAdmin ? <LocationManagement /> : null;
       case "routes":
-        return <RouteManagement />;
+        return isAdmin ? <RouteManagement /> : null;
+      case "trips":
+        return isAdmin ? <AdminTripManagement /> : null;
 
-      // Driver
+      // This is a shared page, but the component itself is role-aware
       case "vehicles":
         return <VehicleManagement />;
+
+      // Driver Pages
       case "trip-requests":
-        return <Placeholder title="Available Trip Requests" />;
+        return profile?.role === "driver" ? <DriverTripList /> : null;
 
-      // Passenger
+      // Passenger Pages
       case "request-trip":
-        return <RequestTrip />;
-      // --- 2. RENDER THE NEW COMPONENT ---
+        return profile?.role === "passenger" ? <RequestTrip /> : null;
       case "my-trips":
-        return <MyTrips />;
+        return profile?.role === "passenger" ? <MyTrips /> : null;
 
-      // Common
+      // Common Page for All Users
       case "profile":
         return <Profile />;
 

@@ -1,6 +1,6 @@
 // src/Components/dashboard/pages/RequestTrip.jsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Swal from "sweetalert2";
 import { FaTaxi } from "react-icons/fa";
 import { useSelector } from "react-redux";
@@ -45,41 +45,51 @@ const selectStyles = {
 
 export default function RequestTrip() {
   const token = useSelector((state) => state.user.accessToken);
-  const [routes, setRoutes] = useState([]);
+  const [routeOptions, setRouteOptions] = useState([]);
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
+  // --- THIS IS THE SIMPLIFIED, CORRECTED FETCH LOGIC ---
+  const fetchRoutes = useCallback(async () => {
     if (!token) return;
+    setLoading(true);
     const api = createApiClient();
-    const fetchRoutes = async () => {
-      setLoading(true);
-      try {
-        const response = await api.get("/api/v1/vehicle/routes/");
-        const routesData = Array.isArray(response.data)
-          ? response.data
-          : response.data.results || [];
+    try {
+      // We only need to make one API call to get all the route information.
+      const response = await api.get("/api/v1/vehicle/vehicle/routes/");
+      const routesData = response.data.results || response.data || [];
 
-        const routeOptions = routesData.map((route) => ({
-          value: route.pk, // Use the integer primary key
+      // The backend now provides the full pickup and drop objects, so we can build the label directly.
+      const options = routesData
+        .map((route) => ({
+          value: route.pk, // Use the integer PK that the TripRequestSerializer expects for `route_id`.
           label: `${route.pickup.name} ➜ ${route.drop.name}`,
           price: route.price_af,
-        }));
-        setRoutes(routeOptions);
-      } catch (error) {
-        console.error("Error fetching routes:", error);
-        Swal.fire("Error", "Could not load available routes.", "error");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchRoutes();
+          driverCount: route.drivers.length,
+        }))
+        // Only show routes that have at least one driver assigned.
+        .filter((route) => route.driverCount > 0);
+
+      setRouteOptions(options);
+    } catch (error) {
+      console.error("Error fetching routes:", error);
+      Swal.fire(
+        "Error",
+        "Could not load available routes. Please try again later.",
+        "error"
+      );
+    } finally {
+      setLoading(false);
+    }
   }, [token]);
+
+  useEffect(() => {
+    fetchRoutes();
+  }, [fetchRoutes]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitting(true);
 
     if (!selectedRoute || !selectedRoute.value) {
       Swal.fire(
@@ -87,17 +97,15 @@ export default function RequestTrip() {
         "Please choose a route to request a trip.",
         "warning"
       );
-      setSubmitting(false);
       return;
     }
 
-    // --- THIS IS THE FINAL, GUARANTEED FIX ---
-    // The `route_id` from your API is a UUID string. We must send it back
-    // as a string, exactly as we received it. We REMOVE the Number() conversion.
+    setSubmitting(true);
+
     const payload = {
+      // `route_id` on the serializer is a PrimaryKeyRelatedField, so it expects the integer PK.
       route_id: selectedRoute.value,
     };
-    // --- END OF FIX ---
 
     const api = createApiClient();
 
@@ -106,16 +114,15 @@ export default function RequestTrip() {
       Swal.fire({
         icon: "success",
         title: "Trip Requested!",
-        text: 'A driver will be assigned to you shortly. You can check the status in "My Trips".',
+        text: 'An admin will assign a driver shortly. You can check the status in the "My Trips" section.',
+        confirmButtonText: "Great!",
       });
       setSelectedRoute(null);
     } catch (error) {
-      console.error("Error requesting trip:", error.response?.data || error);
-      Swal.fire(
-        "Request Failed",
-        "Something went wrong. Please try again.",
-        "error"
-      );
+      const errorMsg =
+        error.response?.data?.detail ||
+        "Something went wrong. Please try again.";
+      Swal.fire("Request Failed", errorMsg, "error");
     } finally {
       setSubmitting(false);
     }
@@ -139,19 +146,19 @@ export default function RequestTrip() {
                   Choose your route
                 </label>
                 <Select
-                  options={routes}
+                  options={routeOptions}
                   value={selectedRoute}
                   onChange={setSelectedRoute}
                   styles={selectStyles}
                   placeholder="Select a pickup and drop-off location..."
-                  noOptionsMessage={() => "No routes available."}
+                  noOptionsMessage={() => "No routes with available drivers."}
                   isClearable
                 />
               </div>
 
               {selectedRoute && (
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
-                  <p className="text-gray-600">Trip Fare</p>
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-center transition-all duration-300">
+                  <p className="text-gray-600">Estimated Trip Fare</p>
                   <p className="text-3xl font-bold text-blue-700">
                     {selectedRoute.price} AF
                   </p>
@@ -161,8 +168,8 @@ export default function RequestTrip() {
               <div className="pt-4">
                 <button
                   type="submit"
-                  className="primary-btn w-full flex items-center justify-center"
-                  disabled={!selectedRoute || submitting}
+                  className="primary-btn w-full flex items-center justify-center disabled:bg-gray-400"
+                  disabled={!selectedRoute || submitting || loading}
                 >
                   {submitting ? (
                     <Loader2 className="animate-spin" />

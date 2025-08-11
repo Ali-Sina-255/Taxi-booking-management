@@ -22,19 +22,19 @@ const createApiClient = () => {
 
 const StatusBadge = ({ status }) => {
   const statusStyles = {
-    requested: "bg-blue-100 text-blue-700 ring-blue-600/20",
-    in_progress: "bg-yellow-100 text-yellow-800 ring-yellow-600/20",
-    completed: "bg-green-100 text-green-700 ring-green-600/20",
-    cancelled: "bg-gray-100 text-gray-700 ring-gray-600/20",
-    default: "bg-gray-100 text-gray-700 ring-gray-600/20",
+    requested: "bg-blue-100 text-blue-700",
+    in_progress: "bg-yellow-100 text-yellow-800",
+    completed: "bg-green-100 text-green-700",
+    cancelled: "bg-red-100 text-red-700",
   };
-  const style = statusStyles[status?.toLowerCase()] || statusStyles.default;
+  const style =
+    statusStyles[status?.toLowerCase()] || "bg-gray-100 text-gray-700";
   const capitalizedStatus = status
     ? status.charAt(0).toUpperCase() + status.slice(1).replace("_", " ")
     : "Unknown";
   return (
     <span
-      className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${style}`}
+      className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ring-gray-500/10 ${style}`}
     >
       {capitalizedStatus}
     </span>
@@ -45,44 +45,18 @@ export default function MyTrips() {
   const token = useSelector((state) => state.user.accessToken);
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [routeDetails, setRouteDetails] = useState({});
 
   const fetchTripData = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     const api = createApiClient();
     try {
+      // This endpoint now returns the full route object nested in each trip.
       const tripsResponse = await api.get("/api/v1/vehicle/trips/");
       const tripsData = Array.isArray(tripsResponse.data.results)
         ? tripsResponse.data.results
-        : tripsResponse.data;
+        : tripsResponse.data || [];
       setTrips(tripsData);
-
-      // --- THIS IS THE GUARANTEED FIX ---
-      // 1. Get all route IDs from the trips.
-      const routeIds = tripsData.map((trip) => trip.route);
-      // 2. Filter out any potential `null` or `undefined` values to prevent the error.
-      const validRouteIds = routeIds.filter((id) => id != null);
-      // 3. Create a Set of unique, valid IDs.
-      const uniqueRouteIds = [...new Set(validRouteIds)];
-      // --- END OF FIX ---
-
-      // If there are no valid routes to fetch, we can stop here.
-      if (uniqueRouteIds.length === 0) {
-        setRouteDetails({});
-        return;
-      }
-
-      const routePromises = uniqueRouteIds.map((id) =>
-        api.get(`/api/v1/vehicle/routes/${id}/`)
-      );
-
-      const routeResponses = await Promise.all(routePromises);
-      const routeMap = {};
-      routeResponses.forEach((res) => {
-        routeMap[res.data.id] = res.data;
-      });
-      setRouteDetails(routeMap);
     } catch (error) {
       console.error("Error fetching trip data:", error);
       Swal.fire("Error", "Could not load your trip history.", "error");
@@ -127,25 +101,22 @@ export default function MyTrips() {
               </thead>
               <tbody>
                 {Array.isArray(trips) && trips.length > 0 ? (
-                  trips.map((trip) => {
-                    const routeInfo = routeDetails[trip.route];
-                    return (
-                      <tr key={trip.id} className="border-b hover:bg-gray-50">
-                        <td className="px-6 py-4 font-medium text-gray-900">
-                          {routeInfo
-                            ? `${routeInfo.pickup.name} ➜ ${routeInfo.drop.name}`
-                            : `Route ID: ${trip.route}`}
-                        </td>
-                        <td className="px-6 py-4 text-gray-600">
-                          {new Date(trip.request_time).toLocaleString()}
-                        </td>
-                        <td className="px-6 py-4">{trip.fare} AF</td>
-                        <td className="px-6 py-4 text-center">
-                          <StatusBadge status={trip.status} />
-                        </td>
-                      </tr>
-                    );
-                  })
+                  trips.map((trip) => (
+                    <tr key={trip.id} className="border-b hover:bg-gray-50">
+                      <td className="px-6 py-4 font-medium text-gray-900">
+                        {trip.route
+                          ? `${trip.route.pickup.name} ➜ ${trip.route.drop.name}`
+                          : "Route details unavailable"}
+                      </td>
+                      <td className="px-6 py-4 text-gray-600">
+                        {new Date(trip.request_time).toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4">{trip.fare} AF</td>
+                      <td className="px-6 py-4 text-center">
+                        <StatusBadge status={trip.status} />
+                      </td>
+                    </tr>
+                  ))
                 ) : (
                   <tr>
                     <td colSpan="4" className="text-center py-16 text-gray-500">

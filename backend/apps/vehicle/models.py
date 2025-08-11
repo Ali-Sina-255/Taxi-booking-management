@@ -6,11 +6,6 @@ from django.db import models
 User = get_user_model()
 
 
-# ----------------------------
-# VEHICLE MODEL
-# ----------------------------
-
-
 class Vehicle(TimeStampedModel):
     LUXURY = "luxury"
     ECONOMY = "economy"
@@ -51,11 +46,6 @@ class Location(TimeStampedModel):
 
     def __str__(self):
         return self.name
-
-
-# ----------------------------
-# ROUTE MODEL
-# ----------------------------
 
 
 class Route(TimeStampedModel):
@@ -130,21 +120,23 @@ class Trip(TimeStampedModel):
     def __str__(self):
         return f"Trip {self.id} by {self.passenger.get_full_name}"
 
-    def clean(self):
+    class Trip(TimeStampedModel):
+    # ... (all your fields)
+
+      def clean(self):
         if self.passenger.role != User.Role.PASSENGER:
             raise ValidationError("Assigned passenger must have role 'passenger'.")
         if self.driver and self.driver.role != User.Role.DRIVER:
             raise ValidationError("Assigned driver must have role 'driver'.")
 
+    # --- THIS IS THE UPDATED SAVE METHOD ---
     def save(self, *args, **kwargs):
-        # Auto-set fare if not manually set
+        # Auto-set fare if not manually set. This is good, we keep it.
         if not self.fare and self.route:
             self.fare = self.route.price_af
-        if not self.driver:
-            self.driver = self.route.drivers.first()
 
-        if not self.vehicle and self.driver:
-            self.vehicle = self.route.vehicles.filter(driver=self.driver).first()
+        # We have REMOVED the automatic driver and vehicle assignment logic.
+        # The trip will now be saved without a driver unless one is explicitly provided.
 
         self.full_clean()
         super().save(*args, **kwargs)

@@ -8,9 +8,9 @@ class ProfileSerializers(serializers.ModelSerializer):
     username = serializers.CharField(source="user.username")
     first_name = serializers.CharField(source="user.first_name")
     last_name = serializers.CharField(source="user.last_name")
-    email = serializers.EmailField(source="user.email")
-    role = serializers.CharField(source="user.role")
-
+    email = serializers.EmailField(source='user.email', read_only=True)
+    role = serializers.CharField(source='user.role', read_only=True)
+    user_pk = serializers.IntegerField(source='user.pk', read_only=True)
     full_name = serializers.SerializerMethodField(read_only=True)
     profile_photo = serializers.SerializerMethodField()
     country = CountryField(name_only=True)
@@ -19,6 +19,7 @@ class ProfileSerializers(serializers.ModelSerializer):
         model = Profile
         fields = [
             "id",
+            'user_pk',
             "username",
             "first_name",
             "last_name",
