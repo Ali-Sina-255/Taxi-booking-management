@@ -48,7 +48,7 @@ class LocationDetailView(generics.RetrieveUpdateDestroyAPIView):
 class RouteViewSet(viewsets.ModelViewSet):
     queryset = Route.objects.all()
     serializer_class = RouteSerializer
-    permission_classes = [permissions.IsAuthenticated, IsAdmin]
+    permission_classes = [permissions.IsAuthenticated]
 
 
 class TripRequestCreateView(generics.ListCreateAPIView):
