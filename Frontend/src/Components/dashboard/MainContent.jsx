@@ -12,7 +12,7 @@ import RequestTrip from "./pages/RequestTrip.jsx";
 import MyTrips from "./pages/MyTrips.jsx";
 import DriverTripList from "./pages/DriverTripList.jsx";
 import AdminTripManagement from "./pages/AdminTripManagement.jsx";
-
+import DriverApplications from "./pages/DriverApplications"; 
 // A simple placeholder for components we haven't built yet
 const Placeholder = ({ title }) => (
   <div className="p-8">
@@ -38,6 +38,8 @@ const MainContent = ({ activeComponent }) => {
         return <DriverTripList />; // Default for drivers is to see trip requests
       case "passenger":
         return <RequestTrip />; // Default for passengers
+      case "applications":
+        return isAdmin ? <DriverApplications /> : null;
       default:
         return <Placeholder title="Dashboard" />;
     }
@@ -52,6 +54,8 @@ const MainContent = ({ activeComponent }) => {
         return isAdmin ? <LocationManagement /> : null;
       case "routes":
         return isAdmin ? <RouteManagement /> : null;
+      case "applications":
+        return isAdmin ? <DriverApplications /> : null;
       case "trips":
         return isAdmin ? <AdminTripManagement /> : null;
 

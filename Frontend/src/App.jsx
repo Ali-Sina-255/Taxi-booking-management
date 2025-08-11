@@ -27,6 +27,7 @@ import ForgotPassword from "./Pages/ForgotPassword";
 import CreateNewPassword from "./Pages/CreatePassword";
 import City from "./Pages/City";
 import NotFound from "./Pages/NotFound";
+import BecomeADriverPage from "./Pages/BecomeADriver";
 
 function App() {
   const [wishlist, setWishlist] = useState([]);
@@ -116,7 +117,8 @@ function App() {
           />
           <Route path="/contact" element={<ContactUs />} />
           <Route path="/about" element={<About />} />
-          <Route path="/cart" element={<CartPage />} />
+          <Route path="/become-a-driver" element={<BecomeADriverPage />} />
+          {/* <Route path="/cart" element={<CartPage />} /> */}
           <Route path="/city" element={<City />} />
           <Route
             path="/wishlist"

@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from .models import Location, Route, Trip, Vehicle
+from .models import Location, Route, Trip, Vehicle, DriverApplication
 
 User = get_user_model()
 
@@ -203,3 +203,27 @@ class AdminTripListSerializer(serializers.ModelSerializer):
         if obj.passenger:
             return obj.passenger.get_full_name
         return "N/A"
+    
+class DriverApplicationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DriverApplication
+        fields = ['id', 'license_number', 'years_of_experience', 'status']
+        read_only_fields = ['status'] # User cannot set the status
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        if hasattr(user, 'driver_application'):
+            raise serializers.ValidationError("You have already submitted an application.")
+        
+        application = DriverApplication.objects.create(user=user, **validated_data)
+        return application
+
+class AdminDriverApplicationSerializer(serializers.ModelSerializer):
+    applicant_name = serializers.CharField(source='user.get_full_name', read_only=True)
+    
+    class Meta:
+        model = DriverApplication
+        fields = [
+            'id', 'applicant_name', 'license_number', 'years_of_experience',
+            'status', 'reviewed_by'
+        ]

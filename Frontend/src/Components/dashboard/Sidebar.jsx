@@ -11,6 +11,8 @@ import {
   FaListAlt,
   FaBars,
   FaTimes,
+  FaUserPlus,
+  FaUserCheck,
 } from "react-icons/fa";
 import { useSelector, useDispatch } from "react-redux";
 import { signOutSuccess } from "../../state/userSlice/userSlice";
@@ -58,9 +60,19 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
       icon: <FaMapMarkedAlt />,
       roles: ["admin"],
     },
-    { name: "Trip Management", value: "trips", icon: <FaTaxi />, roles: ["admin"] },
+    {
+      name: "Trip Management",
+      value: "trips",
+      icon: <FaTaxi />,
+      roles: ["admin"],
+    },
     { name: "Routes", value: "routes", icon: <FaRoute />, roles: ["admin"] },
-
+    {
+      name: "Driver Applications",
+      value: "applications",
+      icon: <FaUserCheck />,
+      roles: ["admin"],
+    },
     // Driver-only links
     {
       name: "My Vehicles",
@@ -97,12 +109,17 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
       roles: ["admin", "driver", "passenger"],
     },
     {
+      name: "Become a Driver",
+      value: "become-a-driver",
+      icon: <FaUserPlus />,
+      roles: ["passenger"],
+    },
+    {
       name: "Logout",
       value: "signout",
       icon: <FaSignOutAlt />,
       roles: ["admin", "driver", "passenger"],
     },
-    
   ];
 
   const accessibleComponents = allMenuItems.filter((item) =>
@@ -145,7 +162,10 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
             <li key={index} className="relative group cursor-pointer">
               <a
                 onClick={() => {
-                  if (component.value === "signout") {
+                  // --- FINAL TWEAK ---
+                  if (component.value === "become-a-driver") {
+                    navigate("/become-a-driver");
+                  } else if (component.value === "signout") {
                     handleSignOut();
                   } else {
                     setActiveComponent(component.value);
