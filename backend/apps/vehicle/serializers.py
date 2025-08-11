@@ -12,7 +12,6 @@ class VehicleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Vehicle
         fields = [
-            "pk",
             "id",
             "driver",
             "driver_name",
@@ -31,39 +30,25 @@ class LocationSerializer(serializers.ModelSerializer):
 
 
 class RouteSerializer(serializers.ModelSerializer):
-    pickup = LocationSerializer(read_only=True)
-    drop = LocationSerializer(read_only=True)
-    pickup_id = serializers.PrimaryKeyRelatedField(
-        queryset=Location.objects.all(), source="pickup", write_only=True
-    )
-    drop_id = serializers.PrimaryKeyRelatedField(
-        queryset=Location.objects.all(), source="drop", write_only=True
-    )
-    drivers = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=User.objects.filter(role="driver"),
-        required=False,
-    )
-    vehicles = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=Vehicle.objects.all(),
-        required=False,
-    )
-
     class Meta:
         model = Route
-        fields = [
+        fields = "__all__"
 
-            "pk", 
-            "id",
-            "pickup",
-            "drop",
-            "pickup_id",
-            "drop_id",
-            "price_af",
-            "drivers",
-            "vehicles",
-        ]
+    def validate(self, attrs):
+        pickup = attrs.get("pickup")
+        drop = attrs.get("drop")
+
+        # When updating, exclude the current instance
+        existing_route = Route.objects.filter(pickup=pickup, drop=drop)
+        if self.instance:
+            existing_route = existing_route.exclude(pk=self.instance.pk)
+
+        if existing_route.exists():
+            raise serializers.ValidationError(
+                {"non_field_errors": ["This route already exists."]}
+            )
+
+        return attrs
 
 
 class TripRequestSerializer(serializers.ModelSerializer):
@@ -74,7 +59,6 @@ class TripRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Trip
         fields = [
-
             "id",
             "route_id",
             "distance_km",
@@ -107,7 +91,6 @@ class DriverTripSerializer(serializers.ModelSerializer):
     class Meta:
         model = Trip
         fields = [
-            "pk",
             "id",
             "passenger_name",
             "pickup",

@@ -1,4 +1,4 @@
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, viewsets
 
 from .models import Location, Route, Trip, Vehicle
 from .permissions import IsDriver, IsOwnerOrReadOnly, IsPassenger
@@ -47,11 +47,9 @@ class LocationDetailView(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = "id"
 
 
-# Route Views
-class RouteListCreateView(generics.ListCreateAPIView):
+class RouteViewSet(viewsets.ModelViewSet):
     queryset = Route.objects.all()
     serializer_class = RouteSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
 
 class RouteDetailView(generics.RetrieveUpdateDestroyAPIView):
