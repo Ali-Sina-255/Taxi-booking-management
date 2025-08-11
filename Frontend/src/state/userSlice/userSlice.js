@@ -12,7 +12,10 @@ const getErrorMessage = (error) => {
   if (errorData.detail) return errorData.detail;
   // This will grab all validation errors from DRF and join them.
   return Object.entries(errorData)
-    .map(([key, value]) => `${key}: ${value.join(", ")}`)
+    .map(
+      ([key, value]) =>
+        `${key}: ${Array.isArray(value) ? value.join(", ") : value}`
+    )
     .join("; ");
 };
 
@@ -44,7 +47,9 @@ export const fetchUserProfile = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await api.get("/api/v1/profiles/me/");
-      return response.data;
+      // --- UPDATE: Return the nested 'profile' object directly from the API response.
+      // This simplifies the logic in the reducer.
+      return response.data.profile;
     } catch (error) {
       toast.error("Could not load profile.");
       return rejectWithValue(getErrorMessage(error));
@@ -57,25 +62,25 @@ export const updateUserProfile = createAsyncThunk(
   async (profileData, { rejectWithValue, dispatch }) => {
     try {
       const profilePayload = new FormData();
-      profilePayload.append("username", profileData.username);
-      profilePayload.append("email", profileData.email);
-      profilePayload.append("first_name", profileData.first_name);
-      profilePayload.append("last_name", profileData.last_name);
-      profilePayload.append("phone_number", profileData.phone_number || "");
-      profilePayload.append("about_me", profileData.about_me || "");
-      profilePayload.append("gender", profileData.gender);
-      profilePayload.append("country", profileData.country);
-      profilePayload.append("city", profileData.city || "");
-      if (
-        profileData.profile_photo &&
-        typeof profileData.profile_photo !== "string"
-      ) {
-        profilePayload.append("profile_photo", profileData.profile_photo);
-      }
+      // This loop correctly builds the FormData object for the API
+      Object.keys(profileData).forEach((key) => {
+        if (
+          key === "profile_photo" &&
+          profileData.profile_photo instanceof File
+        ) {
+          profilePayload.append(key, profileData.profile_photo);
+        } else if (profileData[key] != null && !(key === "profile_photo")) {
+          profilePayload.append(key, profileData[key]);
+        }
+      });
+
       await api.put("/api/v1/profiles/me/update/", profilePayload, {
         headers: { "Content-Type": "multipart/form-data" },
       });
+
       toast.success("Profile updated successfully!");
+      // Re-fetch the profile to ensure the Redux state is perfectly in sync with the database.
+      // The .unwrap() function will return the payload or throw an error.
       const updatedProfile = await dispatch(fetchUserProfile()).unwrap();
       return updatedProfile;
     } catch (error) {
@@ -97,7 +102,7 @@ export const createUser = createAsyncThunk(
         last_name: userData.last_name,
         email: userData.email,
         role: userData.role,
-        password: userData.password, // This field was likely named 'password1' before
+        password: userData.password,
         password2: userData.password2,
       };
       const response = await axios.post(`${BASE_URL}${endpoint}`, payload);
@@ -126,13 +131,24 @@ export const signIn = createAsyncThunk(
           headers: { Authorization: `Bearer ${access}` },
         }
       );
-      const profileData = profileResponse.data;
+
+      // --- UPDATE: Unwrap the nested profile object here.
+      // This makes the payload sent to the reducer much cleaner and simpler to use.
+      const profileData = profileResponse.data.profile;
+        const userPkid = profileData.user_pkid;
+      if (!userPkid) {
+        throw new Error("User PKID not found in profile response. Check the ProfileSerializer.");
+      }
+      // This line remains unchanged
       dispatch(fetchUserCart());
       toast.success("Login successful!");
+
+      // --- UPDATE: The payload now contains the unwrapped profile.
       return {
         accessToken: access,
         refreshToken: refresh,
         profile: profileData,
+        pkid: userPkid,
       };
     } catch (error) {
       const message = getErrorMessage(error);
@@ -142,7 +158,7 @@ export const signIn = createAsyncThunk(
   }
 );
 
-// --- CART THUNKS ---
+// --- CART THUNKS (THESE ARE UNCHANGED) ---
 export const fetchUserCart = createAsyncThunk(
   "user/fetchUserCart",
   async (_, { rejectWithValue }) => {
@@ -235,16 +251,14 @@ const userSlice = createSlice({
         state.loading = false;
         state.accessToken = action.payload.accessToken;
         state.refreshToken = action.payload.refreshToken;
-
-        // ===== FIX: Unwrap the nested profile from the sign-in payload =====
-        const actualProfile = action.payload.profile.profile;
-        state.profile = actualProfile;
+        // --- UPDATE: The logic is simpler because the payload is already the clean profile object.
+        state.profile = action.payload.profile;
         state.currentUser = {
-          id: actualProfile.id,
-          email: actualProfile.email,
-          first_name: actualProfile.first_name,
-          last_name: actualProfile.last_name,
-          role:actualProfile.role,
+          id: action.payload.profile.user_pk, // Use the user's integer PK
+          email: action.payload.profile.email,
+          pkid: action.payload.pkid,
+          fullName: action.payload.profile.full_name,
+          role: action.payload.profile.role,
         };
       })
       .addCase(signIn.rejected, (state, action) => {
@@ -263,7 +277,7 @@ const userSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Cart Reducers
+      // Cart Reducers (THESE ARE UNCHANGED)
       .addCase(fetchUserCart.pending, (state) => {
         state.cartLoading = true;
       })
@@ -301,14 +315,13 @@ const userSlice = createSlice({
         state.loading = true;
       })
       .addCase(fetchUserProfile.fulfilled, (state, action) => {
-        // ===== FIX: Unwrap the nested profile object from the API response =====
-        const actualProfile = action.payload.profile;
-        state.profile = actualProfile;
+        // --- UPDATE: The payload is already the clean profile object. No need for ".profile".
+        state.profile = action.payload;
         state.currentUser = {
-          id: actualProfile.id,
-          email: actualProfile.email,
-          first_name: actualProfile.first_name,
-          last_name: actualProfile.last_name,
+          id: action.payload.user_pk,
+          email: action.payload.email,
+          fullName: action.payload.full_name,
+          role: action.payload.role,
         };
         state.loading = false;
       })
@@ -320,13 +333,13 @@ const userSlice = createSlice({
         state.loading = true;
       })
       .addCase(updateUserProfile.fulfilled, (state, action) => {
-        // ===== FIX: Unwrap the nested profile here as well =====
-        const actualProfile = action.payload.profile;
-        state.profile = actualProfile;
+        // --- UPDATE: The payload is the updated profile object.
+        state.profile = action.payload;
         state.currentUser = {
-          ...state.currentUser,
-          first_name: actualProfile.first_name,
-          last_name: actualProfile.last_name,
+          id: action.payload.user_pk,
+          email: action.payload.email,
+          fullName: action.payload.full_name,
+          role: action.payload.role,
         };
         state.loading = false;
       })
@@ -340,8 +353,7 @@ const userSlice = createSlice({
 export const { signOutSuccess, clearUserError } = userSlice.actions;
 export default userSlice.reducer;
 
+// This function allows the axios instance to access the Redux store
 export const injectStore = (_store) => {
   store = _store;
 };
-
-

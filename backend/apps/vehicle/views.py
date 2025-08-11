@@ -1,5 +1,5 @@
 from rest_framework import generics, permissions, viewsets
-
+from rest_framework.exceptions import ValidationError, PermissionDenied
 from .models import Location, Route, Trip, Vehicle
 from .permissions import IsDriver, IsOwnerOrReadOnly, IsPassenger
 from .serializers import (
@@ -8,8 +8,11 @@ from .serializers import (
     RouteSerializer,
     TripRequestSerializer,
     VehicleSerializer,
+    TripUpdateSerializer,
+    AdminTripUpdateSerializer,
+    AdminTripListSerializer,
 )
-
+from .permissions import IsDriver, IsOwnerOrReadOnly, IsPassenger, IsAdmin
 
 # Vehicle Views
 class VehicleListCreateView(generics.ListCreateAPIView):
@@ -18,13 +21,27 @@ class VehicleListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
+        """
+        Custom logic for creating a vehicle based on user role.
+        """
         user = self.request.user
-        # Only drivers can assign themselves as driver
-        if user.role == "driver":
-            serializer.save(driver=user)
-        else:
-            serializer.save()
 
+        if user.role == "driver":
+            # If the user is a driver, they are assigned as the vehicle's driver.
+            serializer.save(driver=user)
+        
+        elif user.role == "admin":
+            driver = serializer.validated_data.get('driver')
+            if not driver:
+                # If the driver is not provided by the admin, raise a validation error.
+                raise ValidationError({"driver": ["This field is required."]})
+            
+            # If a driver was provided, save the vehicle with that driver.
+            serializer.save(driver=driver)
+        
+        else:
+            # If the user is neither a driver nor an admin, deny permission.
+            raise PermissionDenied("You do not have permission to create a vehicle.")
 
 class VehicleDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Vehicle.objects.all()
@@ -65,15 +82,12 @@ class TripRequestCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated, IsPassenger]
 
     def get_queryset(self):
-        # List only trips for the logged-in passenger
         return Trip.objects.filter(passenger=self.request.user)
 
     def perform_create(self, serializer):
-        # Auto-assign the passenger on create
         serializer.save(passenger=self.request.user)
 
 
-# For drivers to view trips assigned to them
 class DriverTripListView(generics.ListAPIView):
     serializer_class = DriverTripSerializer
     permission_classes = [permissions.IsAuthenticated, IsDriver]
@@ -85,17 +99,36 @@ class DriverTripListView(generics.ListAPIView):
 
 # Trip detail view for passenger or driver with owner permissions
 class TripDetailView(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = TripRequestSerializer
     queryset = Trip.objects.all()
-    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
+    # An action is permitted if the user is an owner OR an admin.
+    permission_classes = [(IsOwnerOrReadOnly | IsAdmin)]
     lookup_field = "id"
 
-    def get_object(self):
-        trip = super().get_object()
+    def get_serializer_class(self):
+        """
+        Return the appropriate serializer class based on the user's role and request method.
+        """
         user = self.request.user
-        # Only passenger or driver assigned to trip can access it
-        if trip.passenger != user and trip.driver != user:
-            from rest_framework.exceptions import PermissionDenied
+        if user.role == 'admin' and self.request.method in ['PATCH', 'PUT']:
+            # Admins use the special serializer for updates.
+            return AdminTripUpdateSerializer
+        
+        if self.request.method in ['PATCH', 'PUT']:
+            # Drivers/Passengers use the simple status update serializer.
+            return TripUpdateSerializer
+        
+        # Everyone uses the detailed serializer for viewing.
+        return TripRequestSerializer
 
-            raise PermissionDenied("You do not have permission to access this trip.")
-        return trip
+    def get_object(self):
+        # The get_object permission check can be simplified now that the
+        # main permission_classes handles it.
+        return super().get_object()
+    
+class AdminTripListView(generics.ListAPIView):
+    queryset = Trip.objects.select_related('passenger', 'route__pickup', 'route__drop', 'driver').all().order_by('-request_time')
+    # --- THIS IS THE FIX ---
+    # We must use the serializer that was specifically designed for this page.
+    serializer_class = AdminTripListSerializer
+    # --- END OF FIX ---
+    permission_classes = [permissions.IsAuthenticated, IsAdmin]

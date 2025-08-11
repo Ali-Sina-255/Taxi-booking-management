@@ -8,11 +8,16 @@ User = get_user_model()
 
 class VehicleSerializer(serializers.ModelSerializer):
     driver_name = serializers.CharField(source="driver.get_full_name", read_only=True)
-
+    driver = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.filter(role=User.Role.DRIVER),
+        required=False,
+        allow_null=True
+    )
     class Meta:
         model = Vehicle
         fields = [
             "id",
+            "pk", 
             "driver",
             "driver_name",
             "model",
@@ -26,13 +31,31 @@ class VehicleSerializer(serializers.ModelSerializer):
 class LocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
-        fields = ["id", "name"]
+        fields = ["id", "name","pk"]
 
 
 class RouteSerializer(serializers.ModelSerializer):
+    pickup = LocationSerializer(read_only=True)
+    drop = LocationSerializer(read_only=True)
+    pickup_id = serializers.PrimaryKeyRelatedField(
+        queryset=Location.objects.all(), source='pickup', write_only=True
+    )
+    drop_id = serializers.PrimaryKeyRelatedField(
+        queryset=Location.objects.all(), source='drop', write_only=True
+    )
     class Meta:
         model = Route
-        fields = "__all__"
+        fields = [
+            'id',       # The UUID
+            'pk',       # The Integer Primary Key
+            'pickup',
+            'drop',
+            'price_af',
+            'drivers',
+            'vehicles',
+            'pickup_id', 
+            'drop_id'
+        ]
         # Prevent DRF from automatically adding UniqueTogetherValidator
         validators = []
 
@@ -79,12 +102,13 @@ class TripRequestSerializer(serializers.ModelSerializer):
     route_id = serializers.PrimaryKeyRelatedField(
         queryset=Route.objects.all(), source="route", write_only=True
     )
-
+    route = RouteSerializer(read_only=True)
     class Meta:
         model = Trip
         fields = [
             "id",
-            "route_id",
+            "route_id",  # For writing
+            "route",     # For reading
             "distance_km",
             "fare",
             "status",
@@ -123,3 +147,59 @@ class DriverTripSerializer(serializers.ModelSerializer):
             "status",
             "request_time",
         ]
+class TripUpdateSerializer(serializers.ModelSerializer):
+    """
+    A simple serializer specifically for updating a trip's status.
+    It does not contain the passenger-only validation logic.
+    """
+    class Meta:
+        model = Trip
+        fields = ['status']
+
+class AdminTripUpdateSerializer(serializers.ModelSerializer):
+    """
+    A serializer for Admins to update a trip.
+    Allows assigning a driver and changing the status.
+    """
+    # The driver field is a write-only field expecting the User's integer PK.
+    driver = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.filter(role=User.Role.DRIVER),
+        required=False, # Make it optional
+        allow_null=True
+    )
+
+    class Meta:
+        model = Trip
+        # List only the fields an admin should be able to change.
+        fields = ['driver', 'status']
+
+
+class AdminTripListSerializer(serializers.ModelSerializer):
+    """
+    A read-only serializer for the admin trip management page.
+    It includes nested details for the passenger, driver, and route.
+    """
+    # Nested serializer for the passenger to get their full name
+    passenger = serializers.SerializerMethodField()
+    # Nested serializer for the route to get pickup and dropoff names
+    route = RouteSerializer(read_only=True)
+    # Get the assigned driver's name if they exist
+    driver_name = serializers.CharField(source='driver.get_full_name', read_only=True, allow_null=True)
+
+    class Meta:
+        model = Trip
+        fields = [
+            'id',
+            'passenger',
+            'driver', # The driver's integer PK
+            'driver_name',
+            'route',
+            'fare',
+            'status',
+            'request_time'
+        ]
+
+    def get_passenger(self, obj):
+        if obj.passenger:
+            return obj.passenger.get_full_name
+        return "N/A"

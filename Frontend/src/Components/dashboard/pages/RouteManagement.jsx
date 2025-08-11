@@ -42,75 +42,62 @@ const selectStyles = {
     color: state.isSelected ? "white" : "black",
     cursor: "pointer",
   }),
-  multiValue: (provided) => ({ ...provided, backgroundColor: "#dbeafe" }),
-  multiValueLabel: (provided) => ({ ...provided, color: "#1e40af" }),
 };
 
 export default function RouteManagement() {
   const token = useSelector((state) => state.user.accessToken);
 
   const initialFormState = {
-    pickup_id: null,
-    drop_id: null,
+    pickup: null,
+    drop: null,
     price_af: "",
     drivers: [],
     vehicles: [],
   };
-
   const [formData, setFormData] = useState(initialFormState);
   const [routes, setRoutes] = useState([]);
   const [editingRoute, setEditingRoute] = useState(null);
   const [loading, setLoading] = useState(true);
-
   const [locationOptions, setLocationOptions] = useState([]);
   const [driverOptions, setDriverOptions] = useState([]);
   const [vehicleOptions, setVehicleOptions] = useState([]);
-  const [driverLookup, setDriverLookup] = useState({});
 
-  useEffect(() => {
+  const fetchRelatedData = useCallback(async () => {
     if (!token) return;
-    const api = createApiClient();
-    const fetchRelatedData = async () => {
-      try {
-        const [locationsRes, profilesRes, vehiclesRes] = await Promise.all([
-          api.get("/api/v1/vehicle/locations/"),
-          api.get("/api/v1/profiles/all/"),
-          api.get("/api/v1/vehicle/vehicles/"),
-        ]);
+    try {
+      const api = createApiClient();
+      const [locationsRes, profilesRes, vehiclesRes] = await Promise.all([
+        api.get("/api/v1/vehicle/locations/"),
+        api.get("/api/v1/profiles/all/"),
+        api.get("/api/v1/vehicle/vehicles/"),
+      ]);
 
-        const locations = Array.isArray(locationsRes.data.results)
-          ? locationsRes.data.results
-          : locationsRes.data;
-        setLocationOptions(
-          locations.map((loc) => ({ value: loc.id, label: loc.name }))
-        );
+      const locations = locationsRes.data.results || locationsRes.data || [];
+      setLocationOptions(
+        locations.map((loc) => ({ value: loc.pk, label: loc.name }))
+      );
 
-        const profiles = profilesRes.data?.profiles?.results || [];
-        const drivers = profiles.filter((p) => p.role === "driver");
-        setDriverOptions(
-          drivers.map((d) => ({ value: d.id, label: d.full_name }))
-        );
+      const profiles = profilesRes.data?.profiles?.results || [];
+      const drivers = profiles.filter((p) => p.role === "driver");
 
-        const vehicles = Array.isArray(vehiclesRes.data.results)
-          ? vehiclesRes.data.results
-          : vehiclesRes.data;
-        setVehicleOptions(
-          vehicles.map((v) => ({
-            value: v.id,
-            label: `${v.model} - ${v.plate_number}`,
-          }))
-        );
+      // --- THIS IS THE FINAL, GUARANTEED FIX ---
+      // The correct field name from the ProfileSerializer is `user_pkid`.
+      setDriverOptions(
+        drivers.map((d) => ({ value: d.user_pkid, label: d.full_name }))
+      );
+      // --- END OF FIX ---
 
-        const lookup = {};
-        drivers.forEach((driver) => {
-          lookup[driver.id] = driver.full_name;
-        });
-        setDriverLookup(lookup);
-      } catch (error) {
-        console.error("Error fetching related data:", error);
-      }
-    };
-    fetchRelatedData();
+      const vehicles = vehiclesRes.data.results || vehiclesRes.data || [];
+      setVehicleOptions(
+        vehicles.map((v) => ({
+          value: v.pk,
+          label: `${v.model} - ${v.plate_number}`,
+        }))
+      );
+    } catch (error) {
+      console.error("Error fetching related data:", error);
+      Swal.fire("Data Loading Error", "Could not load required data.", "error");
+    }
   }, [token]);
 
   const fetchRoutes = useCallback(async () => {
@@ -118,12 +105,8 @@ export default function RouteManagement() {
     setLoading(true);
     try {
       const api = createApiClient();
-      const response = await api.get("/api/v1/vehicle/routes/");
-      setRoutes(
-        Array.isArray(response.data.results)
-          ? response.data.results
-          : response.data
-      );
+      const response = await api.get("/api/v1/vehicle/vehicle/routes/");
+      setRoutes(response.data.results || response.data || []);
     } catch (error) {
       console.error("Error fetching routes:", error);
     } finally {
@@ -132,8 +115,10 @@ export default function RouteManagement() {
   }, [token]);
 
   useEffect(() => {
-    fetchRoutes();
-  }, [fetchRoutes]);
+    fetchRelatedData().then(() => {
+      fetchRoutes();
+    });
+  }, [fetchRelatedData, fetchRoutes]);
 
   const resetForm = () => {
     setFormData(initialFormState);
@@ -144,18 +129,15 @@ export default function RouteManagement() {
     const { name } = actionMeta;
     setFormData((prev) => ({
       ...prev,
-      [name]:
-        selectedOption ||
-        (name === "drivers" || name === "vehicles" ? [] : null),
+      [name]: selectedOption || (Array.isArray(prev[name]) ? [] : null),
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (
-      !formData.pickup_id?.value ||
-      !formData.drop_id?.value ||
+      !formData.pickup?.value ||
+      !formData.drop?.value ||
       !formData.price_af
     ) {
       Swal.fire(
@@ -165,8 +147,7 @@ export default function RouteManagement() {
       );
       return;
     }
-
-    if (formData.pickup_id.value === formData.drop_id.value) {
+    if (formData.pickup.value === formData.drop.value) {
       Swal.fire(
         "Invalid Route",
         "Pickup and Drop-off locations cannot be the same.",
@@ -175,40 +156,22 @@ export default function RouteManagement() {
       return;
     }
 
-    const isDuplicate = routes.some((route) =>
-      editingRoute && route.id === editingRoute.id
-        ? false
-        : route.pickup.id === formData.pickup_id.value &&
-          route.drop.id === formData.drop_id.value
-    );
-
-    if (isDuplicate) {
-      Swal.fire(
-        "Duplicate Route",
-        "A route with this pickup and drop-off already exists.",
-        "error"
-      );
-      return;
-    }
-
-    // --- THIS IS THE FINAL, CORRECTED PAYLOAD LOGIC ---
     const payload = {
-      pickup_id: Number(formData.pickup_id.value),
-      drop_id: Number(formData.drop_id.value),
+      pickup_id: formData.pickup.value,
+      drop_id: formData.drop.value,
       price_af: formData.price_af,
       drivers: Array.isArray(formData.drivers)
-        ? formData.drivers.map((d) => Number(d.value))
+        ? formData.drivers.map((d) => d.value)
         : [],
       vehicles: Array.isArray(formData.vehicles)
-        ? formData.vehicles.map((v) => Number(v.value))
+        ? formData.vehicles.map((v) => v.value)
         : [],
     };
-    // --- END OF FIX ---
 
     const api = createApiClient();
     const url = editingRoute
-      ? `/api/v1/vehicle/routes/${editingRoute.id}/`
-      : "/api/v1/vehicle/routes/";
+      ? `/api/v1/vehicle/vehicle/routes/${editingRoute.pk}/`
+      : "/api/v1/vehicle/vehicle/routes/";
     const method = editingRoute ? "put" : "post";
 
     try {
@@ -221,20 +184,20 @@ export default function RouteManagement() {
       resetForm();
       fetchRoutes();
     } catch (error) {
-      console.error("Submission Error:", error.response?.data || error.message);
-      Swal.fire(
-        "Submission Error",
-        "The server rejected the request. Please check that all fields are correct.",
-        "error"
-      );
+      const errorData = error.response?.data;
+      const errorMsg =
+        errorData?.non_field_errors?.[0] ||
+        Object.values(errorData).flat().join(" ") ||
+        "An error occurred.";
+      Swal.fire("Submission Error", errorMsg, "error");
     }
   };
 
   const handleEdit = (route) => {
     setEditingRoute(route);
     setFormData({
-      pickup_id: locationOptions.find((opt) => opt.value === route.pickup.id),
-      drop_id: locationOptions.find((opt) => opt.value === route.drop.id),
+      pickup: locationOptions.find((opt) => opt.value === route.pickup.pk),
+      drop: locationOptions.find((opt) => opt.value === route.drop.pk),
       price_af: route.price_af,
       drivers: route.drivers
         .map((id) => driverOptions.find((d) => d.value === id))
@@ -246,18 +209,17 @@ export default function RouteManagement() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (pk) => {
     const result = await Swal.fire({
       title: "Are you sure?",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#d33",
       confirmButtonText: "Yes, delete it!",
     });
     if (result.isConfirmed) {
       try {
         const api = createApiClient();
-        await api.delete(`/api/v1/vehicle/routes/${id}/`);
+        await api.delete(`/api/v1/vehicle/vehicle/routes/${pk}/`);
         Swal.fire("Deleted!", "The route has been deleted.", "success");
         fetchRoutes();
       } catch (error) {
@@ -272,15 +234,14 @@ export default function RouteManagement() {
         <h2 className="text-2xl text-center font-bold mb-6 flex items-center justify-center gap-2">
           <FaRoute /> {editingRoute ? "Edit Route" : "Create New Route"}
         </h2>
-
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block mb-2 font-medium">Pickup Location</label>
               <Select
-                name="pickup_id"
+                name="pickup"
                 options={locationOptions}
-                value={formData.pickup_id}
+                value={formData.pickup}
                 onChange={handleSelectChange}
                 styles={selectStyles}
                 placeholder="Search..."
@@ -291,9 +252,9 @@ export default function RouteManagement() {
                 Drop-off Location
               </label>
               <Select
-                name="drop_id"
+                name="drop"
                 options={locationOptions}
-                value={formData.drop_id}
+                value={formData.drop}
                 onChange={handleSelectChange}
                 styles={selectStyles}
                 placeholder="Search..."
@@ -311,6 +272,7 @@ export default function RouteManagement() {
               }
               className="w-full input-field"
               placeholder="e.g. 250.00"
+              required
             />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -387,16 +349,20 @@ export default function RouteManagement() {
                     <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-600" />
                   </td>
                 </tr>
-              ) : Array.isArray(routes) && routes.length > 0 ? (
+              ) : routes.length > 0 ? (
                 routes.map((route) => (
-                  <tr key={route.id} className="border-b hover:bg-gray-50">
+                  <tr key={route.pk} className="border-b hover:bg-gray-50">
                     <td className="px-6 py-4 font-medium text-gray-900">
                       {route.pickup.name} ➜ {route.drop.name}
                     </td>
                     <td className="px-6 py-4">{route.price_af} AF</td>
                     <td className="px-6 py-4 text-xs">
                       {route.drivers
-                        .map((driverId) => driverLookup[driverId] || "Unknown")
+                        .map(
+                          (driverId) =>
+                            driverOptions.find((d) => d.value === driverId)
+                              ?.label || `ID:${driverId}`
+                        )
                         .join(", ") || "None"}
                     </td>
                     <td className="px-6 py-4 flex items-center justify-center gap-4">
@@ -408,7 +374,7 @@ export default function RouteManagement() {
                         <FaRegEdit size={20} />
                       </button>
                       <button
-                        onClick={() => handleDelete(route.id)}
+                        onClick={() => handleDelete(route.pk)}
                         className="text-red-600 hover:text-red-800"
                         title="Delete Route"
                       >

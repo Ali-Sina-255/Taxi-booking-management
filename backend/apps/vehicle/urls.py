@@ -10,6 +10,7 @@ from .views import (
     TripRequestCreateView,
     VehicleDetailView,
     VehicleListCreateView,
+    AdminTripListView,
 )
 
 router = DefaultRouter()
@@ -25,6 +26,7 @@ urlpatterns = [
     # path("routes/", RouteListCreateView.as_view(), name="route-list-create"),
     # path("routes/<uuid:id>/", RouteDetailView.as_view(), name="route-detail"),
     path("trips/", TripRequestCreateView.as_view(), name="trip-list-create"),
-    path("trips/<int:pk>/", TripDetailView.as_view(), name="trip-detail"),
+    path("trips/<uuid:id>/", TripDetailView.as_view(), name="trip-detail"),
     path("driver/trips/", DriverTripListView.as_view(), name="driver-trip-list"),
+     path("admin/trips/", AdminTripListView.as_view(), name="admin-trip-list"),
 ]
