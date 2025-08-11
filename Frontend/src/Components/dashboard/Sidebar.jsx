@@ -58,6 +58,7 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
       icon: <FaMapMarkedAlt />,
       roles: ["admin"],
     },
+    { name: "Trip Management", value: "trips", icon: <FaTaxi />, roles: ["admin"] },
     { name: "Routes", value: "routes", icon: <FaRoute />, roles: ["admin"] },
 
     // Driver-only links
