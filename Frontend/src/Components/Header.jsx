@@ -44,7 +44,7 @@ const Header = ({ searchQuery, setSearchQuery }) => {
             <div className="flex items-center lg:hidden">
               <button
                 onClick={() => setMobileMenuOpen(true)}
-                className="p-2 text-primary"
+                className="p-2 text-white"
               >
                 <Menu size={24} />
               </button>
@@ -81,7 +81,7 @@ const Header = ({ searchQuery, setSearchQuery }) => {
                 setSearchQuery={setSearchQuery}
               />
               <Link
-                to="/account"
+                to="/dashboard"
                 className="p-2 text-white border rounded-full hidden lg:block transition-colors duration-200"
               >
                 <User size={24} />

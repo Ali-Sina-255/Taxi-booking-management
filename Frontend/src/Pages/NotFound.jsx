@@ -19,7 +19,7 @@ const NotFound = () => {
     <div className="flex flex-col justify-center items-center min-h-screen bg-gradient-to-br from-white to-gray-200 text-slate-900 px-6">
       {/* تصویر */}
       <img
-        src='notfound.png' // جایگزین با تصویر دلخواه شما
+        src='not.png' // جایگزین با تصویر دلخواه شما
         alt="404 Not Found"
         className="w-64 md:w-96 mb-6 animate-pulse"
       />
@@ -41,7 +41,7 @@ const NotFound = () => {
       {/* دکمه بازگشت به خانه */}
       <button
         onClick={() => navigate("/")}
-        className="bg-green text-white px-6 py-3 rounded-lg text-lg transition duration-300 shadow-md"
+        className="bg-primary text-white px-6 py-3 rounded-lg text-lg transition duration-300 shadow-md"
       >
         بازگشت به صفحه اصلی
       </button>
