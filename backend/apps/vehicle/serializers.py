@@ -33,22 +33,46 @@ class RouteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Route
         fields = "__all__"
+        # Prevent DRF from automatically adding UniqueTogetherValidator
+        validators = []
 
     def validate(self, attrs):
         pickup = attrs.get("pickup")
         drop = attrs.get("drop")
 
-        # When updating, exclude the current instance
-        existing_route = Route.objects.filter(pickup=pickup, drop=drop)
+        qs = Route.objects.filter(pickup=pickup, drop=drop)
         if self.instance:
-            existing_route = existing_route.exclude(pk=self.instance.pk)
+            qs = qs.exclude(pk=self.instance.pk)
 
-        if existing_route.exists():
+        if qs.exists():
             raise serializers.ValidationError(
                 {"non_field_errors": ["This route already exists."]}
             )
 
         return attrs
+
+    def create(self, validated_data):
+        drivers = validated_data.pop("drivers", [])
+        vehicles = validated_data.pop("vehicles", [])
+
+        route = super().create(validated_data)
+        route.drivers.set(drivers)
+        route.vehicles.set(vehicles)
+        return route
+
+    def update(self, instance, validated_data):
+        drivers = validated_data.pop("drivers", None)
+        vehicles = validated_data.pop("vehicles", None)
+
+        instance = super().update(instance, validated_data)
+
+        if drivers is not None:
+            instance.drivers.set(drivers)
+
+        if vehicles is not None:
+            instance.vehicles.set(vehicles)
+
+        return instance
 
 
 class TripRequestSerializer(serializers.ModelSerializer):
