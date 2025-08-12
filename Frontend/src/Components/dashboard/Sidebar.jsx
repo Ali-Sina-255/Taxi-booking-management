@@ -47,19 +47,24 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
   const allMenuItems = [
     // Admin-only links
     {
-      name: "Dashboard",
+      name: "داشبورد",
       value: "dashboard",
       icon: <MdDashboardCustomize />,
       roles: ["admin"],
     },
     {
-      name: "Locations",
+      name: "موقیعت ها",
       value: "locations",
       icon: <FaMapMarkedAlt />,
       roles: ["admin"],
     },
-    { name: "Trip Management", value: "trips", icon: <FaTaxi />, roles: ["admin"] },
-    { name: "Routes", value: "routes", icon: <FaRoute />, roles: ["admin"] },
+    {
+      name: "مدیریت سفرها",
+      value: "trips",
+      icon: <FaTaxi />,
+      roles: ["admin"],
+    },
+    { name: "مسیرها ", value: "routes", icon: <FaRoute />, roles: ["admin"] },
 
     // Driver-only links
     {
@@ -91,18 +96,17 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
 
     // Links for all users
     {
-      name: "Profile",
+      name: "پروفایل",
       value: "profile",
       icon: <FaUser />,
       roles: ["admin", "driver", "passenger"],
     },
     {
-      name: "Logout",
+      name: "خروج",
       value: "signout",
       icon: <FaSignOutAlt />,
       roles: ["admin", "driver", "passenger"],
     },
-    
   ];
 
   const accessibleComponents = allMenuItems.filter((item) =>
@@ -112,7 +116,7 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
   return (
     <>
       <div
-        className={` h-full transition-all duration-300 ease-in-out bg-white shadow-md ${
+        className={` h-full transition-all duration-300 ease-in-out bg-secondary shadow-md ${
           isOpen ? "w-[70px] md:w-[80px] lg:w-64" : "w-0"
         } overflow-hidden`}
       >
@@ -121,13 +125,13 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
             to="/"
             className="flex items-center justify-center p-2 bg-gray-300 h-8 w-8 md:h-10 md:w-10 rounded-full"
           >
-            <FaTaxi className="text-blue-600" />
+            <FaTaxi className="text-black" />
           </Link>
           <Link
             to="/"
-            className="text-lg font-semibold text-blue-600 whitespace-nowrap hidden lg:inline"
+            className="text-xl font-Ray_black  text-black whitespace-nowrap hidden lg:inline"
           >
-            Taxi-Booking
+            YouRIDe
           </Link>
         </header>
 
@@ -154,7 +158,7 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
                 }}
                 className={`relative flex items-center justify-center lg:justify-start gap-x-3 w-full px-4 rounded-md py-3 transition-all duration-300 ${
                   activeComponent === component.value
-                    ? "bg-gray-200 text-blue-600"
+                    ? "bg-gray-200 text-primary"
                     : "hover:bg-gray-200 text-black"
                 }`}
               >
