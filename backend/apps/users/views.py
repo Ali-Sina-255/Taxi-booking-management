@@ -62,9 +62,9 @@ class PasswordRegisterEmailVerifyApiView(generics.RetrieveAPIView):
 
             email_subject = "Reset Email Verification"
             email_template = "email/reset_password_email.html"
-            send_email_notification(
-                self.request, user, email_subject, email_template, link
-            )
+            # send_email_notification(
+            #     self.request, user, email_subject, email_template, link
+            # )
 
         return user
 

@@ -10,7 +10,7 @@ import RequestTrip from "./pages/RequestTrip.jsx";
 import MyTrips from "./pages/MyTrips.jsx";
 import DriverTripList from "./pages/DriverTripList.jsx";
 import AdminTripManagement from "./pages/AdminTripManagement.jsx";
-import DriverApplications from "./pages/DriverApplications.jsx"; // Corrected import
+import DriverApplications from "./pages/DriverApplications.jsx";
 import UserManagement from "./pages/UserManagement.jsx";
 import DriverManagement from "./pages/DriverManagement.jsx";
 
@@ -23,12 +23,10 @@ const Placeholder = ({ title }) => (
 const MainContent = ({ activeComponent }) => {
   const { profile } = useSelector((state) => state.user);
 
-  // Determine user role for cleaner checks
   const isAdmin = profile?.role === "admin";
   const isDriver = profile?.role === "driver";
   const isPassenger = profile?.role === "passenger";
 
-  // Set a default view for each role
   const getDefaultComponent = () => {
     if (isAdmin) return <AdminTripManagement />;
     if (isDriver) return <DriverTripList />;
@@ -53,25 +51,20 @@ const MainContent = ({ activeComponent }) => {
         return isAdmin ? <DriverApplications /> : null;
       case "trips":
         return isAdmin ? <AdminTripManagement /> : null;
-
-      // Shared Page (the component itself handles role-specific logic)
+      // Shared Page
       case "vehicles":
         return isAdmin || isDriver ? <VehicleManagement /> : null;
-
       // Driver Pages
       case "trip-requests":
         return isDriver ? <DriverTripList /> : null;
-
       // Passenger Pages
       case "request-trip":
         return isPassenger ? <RequestTrip /> : null;
       case "my-trips":
         return isPassenger ? <MyTrips /> : null;
-
-      // Common Page for All Users
+      // Common Page
       case "profile":
         return <Profile />;
-
       default:
         return getDefaultComponent();
     }

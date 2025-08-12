@@ -10,8 +10,8 @@ import {
   FaBars,
   FaTimes,
   FaUserCheck,
-  FaUsersCog, // Using your preferred icons
-  FaCarAlt, // Using your preferred icons
+  FaUsersCog,
+  FaCarAlt,
 } from "react-icons/fa";
 import { useSelector, useDispatch } from "react-redux";
 import { signOutSuccess } from "../../state/userSlice/userSlice";
@@ -25,7 +25,7 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
   const navigate = useNavigate();
   const MySwal = withReactContent(Swal);
   const { profile } = useSelector((state) => state.user);
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(true); // Default to open on desktop
 
   const handleSignOut = () => {
     MySwal.fire({
@@ -33,8 +33,7 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
       text: "You will be logged out!",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
+      confirmButtonColor: "#d33",
       confirmButtonText: "Yes, sign out!",
     }).then((result) => {
       if (result.isConfirmed) {
@@ -44,7 +43,6 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
     });
   };
 
-  // --- Menu items with new additions ---
   const allMenuItems = [
     // --- ADMIN SECTION ---
     {
@@ -90,7 +88,6 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
       roles: ["admin"],
     },
     { name: "Routes", value: "routes", icon: <FaRoute />, roles: ["admin"] },
-
     // --- DRIVER SECTION ---
     {
       name: "Available Trips",
@@ -104,7 +101,6 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
       icon: <FaCar />,
       roles: ["driver"],
     },
-
     // --- PASSENGER SECTION ---
     {
       name: "Request a Trip",
@@ -118,7 +114,6 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
       icon: <FaListAlt />,
       roles: ["passenger"],
     },
-
     // --- COMMON SECTION ---
     {
       name: "Profile",
@@ -140,9 +135,9 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
 
   return (
     <>
-      {/* --- RESTORED STYLING --- */}
+      {/* --- RESTORED STYLING AND STRUCTURE --- */}
       <div
-        className={` h-full transition-all duration-300 ease-in-out bg-secondary shadow-md ${
+        className={` h-full transition-all duration-300 ease-in-out bg-secondary shadow-lg ${
           isOpen ? "w-[70px] md:w-[80px] lg:w-64" : "w-0"
         } overflow-hidden`}
       >
@@ -161,18 +156,9 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
           </Link>
         </header>
 
-        <div className="block lg:hidden text-center mb-4">
-          <button
-            onClick={() => setIsOpen(false)}
-            className="text-blue-600 text-xl"
-          >
-            <FaTimes />
-          </button>
-        </div>
-
-        <ul className="mx-2 space-y-1">
+        <ul className="mx-2 mt-4 space-y-1">
           {accessibleComponents.map((component) => (
-            <li key={component.value} className="relative group cursor-pointer">
+            <li key={component.value}>
               <a
                 onClick={() => {
                   if (component.value === "signout") {
@@ -182,10 +168,10 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
                   }
                   if (window.innerWidth < 1024) setIsOpen(false);
                 }}
-                className={`relative flex items-center justify-center lg:justify-start gap-x-3 w-full px-4 rounded-md py-3 transition-all duration-300 ${
+                className={`relative flex items-center justify-center lg:justify-start gap-x-3 w-full px-4 rounded-md py-3 transition-all duration-300 cursor-pointer ${
                   activeComponent === component.value
-                    ? "bg-gray-200 text-primary"
-                    : "hover:bg-gray-200 text-black"
+                    ? "bg-gray-200 text-primary" // Active link style
+                    : "hover:bg-gray-200 text-black" // Hover style
                 }`}
               >
                 <span className="text-xl">{component.icon}</span>
@@ -198,12 +184,21 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
         </ul>
       </div>
 
+      {/* --- Mobile Toggle Button --- */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
           className="fixed bottom-5 left-5 z-40 bg-blue-600 text-white p-3 rounded-full shadow-lg block lg:hidden"
         >
           <FaBars size={20} />
+        </button>
+      )}
+      {isOpen && (
+        <button
+          onClick={() => setIsOpen(false)}
+          className="fixed top-2.5 left-2.5 z-40 bg-red-500 text-white p-2 rounded-full shadow-lg block lg:hidden"
+        >
+          <FaTimes size={16} />
         </button>
       )}
     </>
