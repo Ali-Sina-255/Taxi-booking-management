@@ -21,7 +21,6 @@ export default function City() {
   const [submitting, setSubmitting] = useState(false);
   const [requested, setRequested] = useState(false);
 
-  // Fetch all necessary public data (locations and routes)
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
@@ -54,7 +53,6 @@ export default function City() {
       return;
     }
 
-    // Find the route that matches the user's selection
     const selectedRoute = routes.find(
       (route) => route.pickup.pk.toString() === fromCity && route.drop.pk.toString() === toCity
     );
