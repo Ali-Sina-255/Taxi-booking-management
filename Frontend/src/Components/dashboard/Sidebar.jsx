@@ -1,5 +1,3 @@
-// src/Components/dashboard/Sidebar.jsx
-
 import React, { useState } from "react";
 import {
   FaSignOutAlt,
@@ -11,8 +9,9 @@ import {
   FaListAlt,
   FaBars,
   FaTimes,
-  FaUserPlus,
   FaUserCheck,
+  FaUsersCog, // Using your preferred icons
+  FaCarAlt, // Using your preferred icons
 } from "react-icons/fa";
 import { useSelector, useDispatch } from "react-redux";
 import { signOutSuccess } from "../../state/userSlice/userSlice";
@@ -45,66 +44,90 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
     });
   };
 
-  // --- NEW MENU ITEMS FOR TAXI APP ---
+  // --- Menu items with new additions ---
   const allMenuItems = [
-    // Admin-only links
+    // --- ADMIN SECTION ---
     {
-      name: "داشبورد",
+      name: "Dashboard",
       value: "dashboard",
       icon: <MdDashboardCustomize />,
       roles: ["admin"],
     },
     {
-      name: "موقیعت ها",
-      value: "locations",
-      icon: <FaMapMarkedAlt />,
+      name: "User Management",
+      value: "users",
+      icon: <FaUsersCog />,
       roles: ["admin"],
     },
     {
-      name: "مدیریت سفرها",
+      name: "Driver Management",
+      value: "drivers",
+      icon: <FaCarAlt />,
+      roles: ["admin"],
+    },
+    {
+      name: "Trip Management",
       value: "trips",
       icon: <FaTaxi />,
       roles: ["admin"],
     },
-    { name: "مسیرها ", value: "routes", icon: <FaRoute />, roles: ["admin"] },
-
-    // Driver-only links
     {
-      name: "وسایط من",
-      value: "vehicles",
-      icon: <FaCar />,
-      roles: ["driver"],
+      name: "Driver Applications",
+      value: "applications",
+      icon: <FaUserCheck />,
+      roles: ["admin"],
     },
     {
-      name: "درخواست سفر",
+      name: "Vehicle Management",
+      value: "vehicles",
+      icon: <FaCar />,
+      roles: ["admin"],
+    },
+    {
+      name: "Locations",
+      value: "locations",
+      icon: <FaMapMarkedAlt />,
+      roles: ["admin"],
+    },
+    { name: "Routes", value: "routes", icon: <FaRoute />, roles: ["admin"] },
+
+    // --- DRIVER SECTION ---
+    {
+      name: "Available Trips",
       value: "trip-requests",
       icon: <FaListAlt />,
       roles: ["driver"],
     },
-
-    // Passenger-only links
     {
-      name: " درخواست سفر",
+      name: "My Vehicles",
+      value: "vehicles",
+      icon: <FaCar />,
+      roles: ["driver"],
+    },
+
+    // --- PASSENGER SECTION ---
+    {
+      name: "Request a Trip",
       value: "request-trip",
       icon: <FaTaxi />,
       roles: ["passenger"],
     },
     {
-      name: "سفرهای من",
+      name: "My Trips",
       value: "my-trips",
       icon: <FaListAlt />,
       roles: ["passenger"],
     },
 
-    // Links for all users
+    // --- COMMON SECTION ---
     {
-      name: "پروفایل",
+      name: "Profile",
       value: "profile",
       icon: <FaUser />,
       roles: ["admin", "driver", "passenger"],
     },
     {
-      name: "خروج",
+      name: "Sign Out",
       value: "signout",
       icon: <FaSignOutAlt />,
       roles: ["admin", "driver", "passenger"],
@@ -117,6 +140,7 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
 
   return (
     <>
+      {/* --- RESTORED STYLING --- */}
       <div
         className={` h-full transition-all duration-300 ease-in-out bg-secondary shadow-md ${
           isOpen ? "w-[70px] md:w-[80px] lg:w-64" : "w-0"
@@ -131,9 +155,9 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
           </Link>
           <Link
             to="/"
-            className="text-xl font-Ray_black  text-black whitespace-nowrap hidden lg:inline"
+            className="text-xl font-Ray_black text-black whitespace-nowrap hidden lg:inline"
           >
-            YouRIDe
+            YouRide
           </Link>
         </header>
 
@@ -147,14 +171,11 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
         </div>
 
         <ul className="mx-2 space-y-1">
-          {accessibleComponents.map((component, index) => (
-            <li key={index} className="relative group cursor-pointer">
+          {accessibleComponents.map((component) => (
+            <li key={component.value} className="relative group cursor-pointer">
               <a
                 onClick={() => {
-                  // --- FINAL TWEAK ---
-                  if (component.value === "become-a-driver") {
-                    navigate("/become-a-driver");
-                  } else if (component.value === "signout") {
+                  if (component.value === "signout") {
                     handleSignOut();
                   } else {
                     setActiveComponent(component.value);

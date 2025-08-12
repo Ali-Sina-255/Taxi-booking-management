@@ -7,14 +7,13 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from apps.vehicle.permissions import IsAdmin
 from .models import Profile
 from .pagination import ProfilePagination
 from .renderers import ProfileJsonRenderers, ProfilesJsonRenderers
-from .serializers import ProfileSerializers, UpdateProfileSerializer
+from .serializers import ProfileSerializers, UpdateProfileSerializer,AdminUserUpdateSerializer,AdminUserListSerializer,AdminUserUpdateSerializer
 
 User = get_user_model()
-
 
 class ProfileListAPIView(generics.ListAPIView):
     queryset = Profile.objects.all()
@@ -56,3 +55,19 @@ class UpdateProfileAPIView(generics.UpdateAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
+class AdminUserListView(generics.ListAPIView):
+    """
+    Provides a list of all users for the admin dashboard.
+    """
+    queryset = User.objects.all().order_by('-date_joined')
+    serializer_class = AdminUserListSerializer
+    permission_classes = [IsAdmin]
+
+class AdminUserDetailView(generics.RetrieveUpdateAPIView):
+    """
+    Allows an admin to retrieve and update a user's role and active status.
+    """
+    queryset = User.objects.all()
+    serializer_class = AdminUserUpdateSerializer
+    permission_classes = [IsAdmin]
+    lookup_field = 'pkid'

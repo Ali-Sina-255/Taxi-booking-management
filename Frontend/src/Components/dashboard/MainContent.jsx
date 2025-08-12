@@ -1,10 +1,8 @@
-// src/Components/dashboard/MainContent.jsx
-
 import React from "react";
 import { useSelector } from "react-redux";
 import Profile from "../../Pages/dashboard/Profiles.jsx";
 
-// --- IMPORT THE NEW MANAGEMENT PAGES ---
+// Import all possible page components
 import VehicleManagement from "./pages/VehicleManagement.jsx";
 import LocationManagement from "./pages/LocationManagement.jsx";
 import RouteManagement from "./pages/RouteManagement.jsx";
@@ -12,8 +10,10 @@ import RequestTrip from "./pages/RequestTrip.jsx";
 import MyTrips from "./pages/MyTrips.jsx";
 import DriverTripList from "./pages/DriverTripList.jsx";
 import AdminTripManagement from "./pages/AdminTripManagement.jsx";
-import DriverApplications from "./pages/DriverApplications";
-// A simple placeholder for components we haven't built yet
+import DriverApplications from "./pages/DriverApplications.jsx"; // Corrected import
+import UserManagement from "./pages/UserManagement.jsx";
+import DriverManagement from "./pages/DriverManagement.jsx";
+
 const Placeholder = ({ title }) => (
   <div className="p-8">
     <h1 className="text-3xl font-bold">{title}</h1>
@@ -23,33 +23,28 @@ const Placeholder = ({ title }) => (
 const MainContent = ({ activeComponent }) => {
   const { profile } = useSelector((state) => state.user);
 
-  // --- THIS IS THE FIX ---
-  // We must define the 'isAdmin' constant so we can use it below.
+  // Determine user role for cleaner checks
   const isAdmin = profile?.role === "admin";
-  // --- END OF FIX ---
+  const isDriver = profile?.role === "driver";
+  const isPassenger = profile?.role === "passenger";
 
-  // Set a default view based on the user's role
+  // Set a default view for each role
   const getDefaultComponent = () => {
-    switch (profile?.role) {
-      case "admin":
-        // Admins should see the trip management page by default
-        return <AdminTripManagement />;
-      case "driver":
-        return <DriverTripList />; // Default for drivers is to see trip requests
-      case "passenger":
-        return <RequestTrip />; // Default for passengers
-      case "applications":
-        return isAdmin ? <DriverApplications /> : null;
-      default:
-        return <Placeholder title="Dashboard" />;
-    }
+    if (isAdmin) return <AdminTripManagement />;
+    if (isDriver) return <DriverTripList />;
+    if (isPassenger) return <RequestTrip />;
+    return <Placeholder title="Dashboard" />;
   };
 
   const renderContent = () => {
     switch (activeComponent) {
       // Admin Pages
       case "dashboard":
-        return <AdminTripManagement />; // Changed default to be more useful
+        return isAdmin ? <AdminTripManagement /> : null;
+      case "users":
+        return isAdmin ? <UserManagement /> : null;
+      case "drivers":
+        return isAdmin ? <DriverManagement /> : null;
       case "locations":
         return isAdmin ? <LocationManagement /> : null;
       case "routes":
@@ -59,19 +54,19 @@ const MainContent = ({ activeComponent }) => {
       case "trips":
         return isAdmin ? <AdminTripManagement /> : null;
 
-      // This is a shared page, but the component itself is role-aware
+      // Shared Page (the component itself handles role-specific logic)
       case "vehicles":
-        return <VehicleManagement />;
+        return isAdmin || isDriver ? <VehicleManagement /> : null;
 
       // Driver Pages
       case "trip-requests":
-        return profile?.role === "driver" ? <DriverTripList /> : null;
+        return isDriver ? <DriverTripList /> : null;
 
       // Passenger Pages
       case "request-trip":
-        return profile?.role === "passenger" ? <RequestTrip /> : null;
+        return isPassenger ? <RequestTrip /> : null;
       case "my-trips":
-        return profile?.role === "passenger" ? <MyTrips /> : null;
+        return isPassenger ? <MyTrips /> : null;
 
       // Common Page for All Users
       case "profile":
@@ -82,7 +77,7 @@ const MainContent = ({ activeComponent }) => {
     }
   };
 
-  return <div className="min-h-full bg-gray-200">{renderContent()}</div>;
+  return <div className="min-h-full bg-gray-100">{renderContent()}</div>;
 };
 
 export default MainContent;

@@ -23,9 +23,16 @@ const createApiClient = () => {
 };
 
 const selectStyles = {
-  /* ... No changes ... */
+  control: (provided) => ({
+    ...provided,
+    backgroundColor: "#f3f4f6",
+    border: "1px solid #e5e7eb",
+    borderRadius: "0.375rem",
+    minHeight: "42px",
+    boxShadow: "none",
+    "&:hover": { borderColor: "#9ca3af" },
+  }),
 };
-
 export default function VehicleManagement() {
   const { profile } = useSelector((state) => state.user);
   const token = useSelector((state) => state.user.accessToken);
@@ -53,12 +60,8 @@ export default function VehicleManagement() {
         const response = await api.get("/api/v1/profiles/all/");
         const allProfiles = response.data?.profiles?.results || [];
         const drivers = allProfiles.filter((p) => p.role === "driver");
-        setDriverOptions(
-          drivers.map((d) => ({ value: d.user_pkid, label: d.full_name }))
-        );
-      } catch (error) {
-        console.error("Error fetching drivers:", error);
-      }
+        setDriverOptions(drivers.map((d) => ({ value: d.user_pkid, label: d.full_name })));
+      } catch (error) { console.error("Error fetching drivers:", error); }
     };
     fetchDrivers();
   }, [profile, token]);
@@ -67,11 +70,10 @@ export default function VehicleManagement() {
   const fetchVehicles = useCallback(async () => {
     if (!token || !profile) return;
     setLoading(true);
-
+    
     // Determine the correct API endpoint based on the user's role
-    const endpoint =
-      profile.role === "admin"
-        ? "/api/v1/vehicle/admin/vehicles/"
+    const endpoint = profile.role === 'admin' 
+        ? "/api/v1/vehicle/admin/vehicles/" 
         : "/api/v1/vehicle/driver/vehicles/";
 
     try {
@@ -90,29 +92,30 @@ export default function VehicleManagement() {
     fetchVehicles();
   }, [fetchVehicles]);
 
-  const resetForm = () => {
-    /* ... No changes ... */
-  };
-  const handleInputChange = (e) => {
-    /* ... No changes ... */
-  };
-  const handleFileChange = (e) => {
-    /* ... No changes ... */
-  };
-  const handleSelectChange = (selectedOption) => {
-    /* ... No changes ... */
-  };
+ const resetForm = () => {
+   setFormData(initialFormState);
+   setEditingVehicle(null);
+ };
+
+ const handleInputChange = (e) => {
+   const { name, value } = e.target;
+   setFormData((prev) => ({ ...prev, [name]: value }));
+ };
+
+ const handleFileChange = (e) => {
+   setFormData((prev) => ({ ...prev, license: e.target.files[0] }));
+ };
+
+ const handleSelectChange = (selectedOption) => {
+   setFormData((prev) => ({ ...prev, driver: selectedOption }));
+ };
 
   // --- UPDATED: handleSubmit to use the correct endpoint ---
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (profile?.role === "admin" && !formData.driver && !editingVehicle) {
-      Swal.fire(
-        "Driver Required",
-        "As an admin, you must select a driver when creating a new vehicle.",
-        "error"
-      );
+      Swal.fire("Driver Required", "As an admin, you must select a driver when creating a new vehicle.", "error");
       return;
     }
 
@@ -120,7 +123,7 @@ export default function VehicleManagement() {
     payload.append("model", formData.model);
     payload.append("plate_number", formData.plate_number);
     payload.append("type", formData.type);
-
+    
     // Only admins can and should send the driver field
     if (profile?.role === "admin" && formData.driver) {
       payload.append("driver", formData.driver.value);
@@ -132,40 +135,58 @@ export default function VehicleManagement() {
 
     const api = createApiClient();
     // Use the role-specific endpoint for creating, but the general one for updating
-    const createEndpoint =
-      profile.role === "admin"
+    const createEndpoint = profile.role === 'admin'
         ? "/api/v1/vehicle/admin/vehicles/"
         : "/api/v1/vehicle/driver/vehicles/";
-
-    const url = editingVehicle
-      ? `/api/v1/vehicle/vehicles/${editingVehicle.id}/`
-      : createEndpoint;
+    
+    const url = editingVehicle ? `/api/v1/vehicle/vehicles/${editingVehicle.id}/` : createEndpoint;
     const method = editingVehicle ? "patch" : "post";
 
     try {
-      await api[method](url, payload, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      Swal.fire(
-        "Success!",
-        `Vehicle ${editingVehicle ? "updated" : "added"} successfully.`,
-        "success"
-      );
+      await api[method](url, payload, { headers: { "Content-Type": "multipart/form-data" } });
+      Swal.fire("Success!", `Vehicle ${editingVehicle ? "updated" : "added"} successfully.`, "success");
       resetForm();
       fetchVehicles();
     } catch (error) {
       const errorData = error.response?.data;
-      const errorMsg =
-        Object.values(errorData).flat().join(" ") || "An error occurred.";
+      const errorMsg = Object.values(errorData).flat().join(" ") || "An error occurred.";
       Swal.fire("Submission Error", errorMsg, "error");
     }
   };
-
-  const handleEdit = (vehicle) => {
-    /* ... No changes ... */
+ const handleEdit = (vehicle) => {
+    setEditingVehicle(vehicle);
+    setFormData({
+      model: vehicle.model,
+      plate_number: vehicle.plate_number,
+      type: vehicle.type,
+      license: null,
+      // If admin, pre-fill the driver dropdown
+      driver: driverOptions.find((opt) => opt.value === vehicle.driver) || null,
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
   const handleDelete = async (id) => {
-    /* ... No changes, uses general delete URL ... */
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const api = createApiClient();
+        await api.delete(`/api/v1/vehicle/vehicles/${id}/`);
+        Swal.fire("Deleted!", "The vehicle has been deleted.", "success");
+        fetchVehicles();
+      } catch (error) {
+        Swal.fire("Error", "Failed to delete the vehicle.", "error");
+      }
+    }
   };
 
   // --- RENDER LOGIC (UI is mostly the same, just controlled by `profile.role`) ---
@@ -177,10 +198,7 @@ export default function VehicleManagement() {
         </h2>
 
         {/* --- The Form --- */}
-        <form
-          onSubmit={handleSubmit}
-          className="max-w-2xl mx-auto space-y-6 bg-white p-6 rounded-lg"
-        >
+        <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-6 bg-white p-6 rounded-lg">
           {/* The "Assign to Driver" dropdown is now correctly shown only for Admins */}
           {profile?.role === "admin" && (
             <div>
@@ -196,40 +214,21 @@ export default function VehicleManagement() {
               />
             </div>
           )}
-
+          
           {/* All other form fields are the same for both roles */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block mb-2 font-medium">Vehicle Model</label>
-              <input
-                name="model"
-                value={formData.model}
-                onChange={handleInputChange}
-                className="w-full input-field"
-                placeholder="e.g., Toyota Corolla"
-                required
-              />
+              <input name="model" value={formData.model} onChange={handleInputChange} className="w-full input-field" placeholder="e.g., Toyota Corolla" required />
             </div>
             <div>
               <label className="block mb-2 font-medium">Plate Number</label>
-              <input
-                name="plate_number"
-                value={formData.plate_number}
-                onChange={handleInputChange}
-                className="w-full input-field"
-                placeholder="e.g., 4-12345"
-                required
-              />
+              <input name="plate_number" value={formData.plate_number} onChange={handleInputChange} className="w-full input-field" placeholder="e.g., 4-12345" required />
             </div>
           </div>
           <div>
             <label className="block mb-2 font-medium">Vehicle Type</label>
-            <select
-              name="type"
-              value={formData.type}
-              onChange={handleInputChange}
-              className="w-full input-field"
-            >
+            <select name="type" value={formData.type} onChange={handleInputChange} className="w-full input-field">
               <option value="economy">Economy</option>
               <option value="luxury">Luxury</option>
               <option value="suv">SUV</option>
@@ -238,117 +237,48 @@ export default function VehicleManagement() {
             </select>
           </div>
           <div>
-            <label className="block mb-2 font-medium">
-              {editingVehicle
-                ? "Upload New License (Optional)"
-                : "Driver's License Scan"}
-            </label>
-            <input
-              type="file"
-              name="license"
-              onChange={handleFileChange}
-              className="w-full file-input"
-              required={!editingVehicle}
-            />
-            {editingVehicle && (
-              <p className="text-xs text-gray-500 mt-1">
-                Leave blank to keep the current license.
-              </p>
-            )}
+            <label className="block mb-2 font-medium">{editingVehicle ? "Upload New License (Optional)" : "Driver's License Scan"}</label>
+            <input type="file" name="license" onChange={handleFileChange} className="w-full file-input" required={!editingVehicle} />
+            {editingVehicle && <p className="text-xs text-gray-500 mt-1">Leave blank to keep the current license.</p>}
           </div>
           <div className="flex justify-center gap-4 pt-4">
-            <button type="submit" className="primary-btn">
-              {editingVehicle ? "Update Vehicle" : "Add Vehicle"}
-            </button>
-            {editingVehicle && (
-              <button
-                type="button"
-                onClick={resetForm}
-                className="secondary-btn"
-              >
-                Cancel Edit
-              </button>
-            )}
+            <button type="submit" className="primary-btn">{editingVehicle ? "Update Vehicle" : "Add Vehicle"}</button>
+            {editingVehicle && <button type="button" onClick={resetForm} className="secondary-btn">Cancel Edit</button>}
           </div>
         </form>
 
         {/* --- The Table --- */}
         <div className="w-full mx-auto bg-white mt-10 border border-gray-200 overflow-x-auto rounded-lg">
           <h3 className="text-xl text-center font-bold p-4 bg-gray-50 border-b">
-            {profile?.role === "admin"
-              ? "All Registered Vehicles"
-              : "My Registered Vehicles"}
+            {profile?.role === 'admin' ? 'All Registered Vehicles' : 'My Registered Vehicles'}
           </h3>
           <table className="w-full text-sm text-left text-gray-500">
             <thead className="text-xs text-gray-700 uppercase bg-gray-100">
               <tr>
-                <th scope="col" className="px-6 py-3">
-                  Model
-                </th>
-                <th scope="col" className="px-6 py-3">
-                  Plate No.
-                </th>
-                <th scope="col" className="px-6 py-3">
-                  Type
-                </th>
+                <th scope="col" className="px-6 py-3">Model</th>
+                <th scope="col" className="px-6 py-3">Plate No.</th>
+                <th scope="col" className="px-6 py-3">Type</th>
                 {/* Driver column is only shown to Admins */}
-                {profile?.role === "admin" && (
-                  <th scope="col" className="px-6 py-3">
-                    Driver
-                  </th>
-                )}
-                <th scope="col" className="px-6 py-3 text-center">
-                  Actions
-                </th>
+                {profile?.role === 'admin' && <th scope="col" className="px-6 py-3">Driver</th>}
+                <th scope="col" className="px-6 py-3 text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {loading ? (
-                <tr>
-                  <td
-                    colSpan={profile?.role === "admin" ? 5 : 4}
-                    className="text-center py-10"
-                  >
-                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-600" />
-                  </td>
-                </tr>
-              ) : vehicles.length > 0 ? (
+              {loading ? ( <tr><td colSpan={profile?.role === 'admin' ? 5 : 4} className="text-center py-10"><Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-600" /></td></tr> )
+              : vehicles.length > 0 ? (
                 vehicles.map((vehicle) => (
                   <tr key={vehicle.id} className="border-b hover:bg-gray-50">
                     <td className="px-6 py-4 font-medium">{vehicle.model}</td>
                     <td className="px-6 py-4">{vehicle.plate_number}</td>
                     <td className="px-6 py-4 capitalize">{vehicle.type}</td>
-                    {profile?.role === "admin" && (
-                      <td className="px-6 py-4">{vehicle.driver_name}</td>
-                    )}
+                    {profile?.role === 'admin' && <td className="px-6 py-4">{vehicle.driver_name}</td>}
                     <td className="px-6 py-4 flex items-center justify-center gap-4">
-                      <button
-                        onClick={() => handleEdit(vehicle)}
-                        className="text-blue-600 hover:text-blue-800"
-                        title="Edit Vehicle"
-                      >
-                        <FaRegEdit size={20} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(vehicle.id)}
-                        className="text-red-600 hover:text-red-800"
-                        title="Delete Vehicle"
-                      >
-                        <IoTrashSharp size={20} />
-                      </button>
+                      <button onClick={() => handleEdit(vehicle)} className="text-blue-600 hover:text-blue-800" title="Edit Vehicle"><FaRegEdit size={20} /></button>
+                      <button onClick={() => handleDelete(vehicle.id)} className="text-red-600 hover:text-red-800" title="Delete Vehicle"><IoTrashSharp size={20} /></button>
                     </td>
                   </tr>
                 ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan={profile?.role === "admin" ? 5 : 4}
-                    className="text-center py-10 text-gray-500"
-                  >
-                    No vehicles found.
-                  </td>
-                </tr>
-              )}
+              ) : ( <tr><td colSpan={profile?.role === 'admin' ? 5 : 4} className="text-center py-10 text-gray-500">No vehicles found.</td></tr> )}
             </tbody>
           </table>
         </div>

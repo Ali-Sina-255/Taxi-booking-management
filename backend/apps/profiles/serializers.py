@@ -1,8 +1,8 @@
 from django_countries.serializer_fields import CountryField
 from rest_framework import serializers
-
+from django.contrib.auth import get_user_model
 from .models import Profile
-
+User = get_user_model() 
 
 class ProfileSerializers(serializers.ModelSerializer):
     username = serializers.CharField(source="user.username")
@@ -81,3 +81,30 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
         return instance
+
+class AdminUserListSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the admin user management page (read-only list).
+    """
+    full_name = serializers.CharField(source='get_full_name', read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            'pkid',         # The integer primary key
+            'id',           # The UUID
+            'username',
+            'email',
+            'full_name',
+            'role',
+            'is_active',
+            'date_joined'
+        ]
+class AdminUserUpdateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for an Admin to update a user's role or active status.
+    """
+    class Meta:
+        model = User
+        # Define the specific fields an admin can modify.
+        fields = ['role', 'is_active']
