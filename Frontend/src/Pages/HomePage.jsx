@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { motion, AnimatePresence } from "framer-motion";
 import WhyChooseUs from "../Components/WhyChooseUs";
@@ -10,7 +10,7 @@ const HomePage = (props) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [animationComplete, setAnimationComplete] = useState(false);
   const timeoutRef = useRef(null);
-
+  const navigate = useNavigate();
   const productListRef = useRef(null);
 
   useEffect(() => {
@@ -98,16 +98,19 @@ const HomePage = (props) => {
             <h1 className="text-4xl md:text-6xl tracking-tighter font-Ray_black text-black">
               سفر سریع , راحت و امن
             </h1>
-            <p className="text-black text-xl ">با ما تجربه متفاوت  از سفر شهری داشته باشید.</p>
+            <p className="text-black text-xl ">
+              با ما تجربه متفاوت از سفر شهری داشته باشید.
+            </p>
 
-            <motion.a
+            <motion.p
               href="#booking"
+              onClick={() => navigate("/city")}
               // whileHover={{ scale: 1.05 }}
               // whileTap={{ scale: 0.95 }}
               className="inline-block px-8 py-4 bg-primary text-white font-semibold rounded-md text-lg shadow-lg hover:bg-primary/50 transition-all duration-300"
             >
-              همین حالا  ثبت نام کنید
-            </motion.a>
+              همین حالا ثبت نام کنید
+            </motion.p>
           </motion.div>
         </div>
       </div>

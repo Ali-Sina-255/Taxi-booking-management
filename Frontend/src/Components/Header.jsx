@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Search, User, ShoppingBag, Menu, X, Heart } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { toast } from "react-hot-toast";
@@ -20,6 +20,7 @@ const BASE_URL = import.meta.env.VITE_BASE_URL || "http://127.0.0.1:8000";
 const Header = ({ searchQuery, setSearchQuery }) => {
   const { cartItems } = useSelector((state) => state.user);
   const cartCount = (cartItems || []).reduce((sum, item) => sum + item.qty, 0);
+  const navigate = useNavigate();
 
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -34,9 +35,7 @@ const Header = ({ searchQuery, setSearchQuery }) => {
     <>
       <header
         className={`sticky top-0 z-30 bg-primary transition-all duration-300 ${
-          isScrolled
-            ? ""
-            : "bg-primary"
+          isScrolled ? "" : "bg-primary"
         }`}
       >
         <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -53,7 +52,10 @@ const Header = ({ searchQuery, setSearchQuery }) => {
             <div className="flex items-center gap-x-10">
               <div className="items-center hidden md:flex">
                 <Link to="/" className="flex items-center gap-x-3">
-                  <p className="text-3xl font-Ray_black text-white "> YouRIDe</p>
+                  <p className="text-3xl font-Ray_black text-white ">
+                    {" "}
+                    YouRIDe
+                  </p>
                 </Link>
               </div>
 
@@ -86,7 +88,10 @@ const Header = ({ searchQuery, setSearchQuery }) => {
               >
                 <User size={24} />
               </Link>
-              <button className="border py-2 px-4 text-white rounded-md font-semibold">
+              <button
+                onClick={() => navigate("/city")}
+                className="border py-2 px-4 text-white rounded-md font-semibold"
+              >
                 درخواست تاکسی
               </button>
             </div>
