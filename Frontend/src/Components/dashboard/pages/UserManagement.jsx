@@ -44,7 +44,6 @@ const StatusToggle = ({ user, onToggle }) => {
 
   const handleToggle = async () => {
     setLoading(true);
-    // FIX: Pass an object with the key 'is_active', as expected by the backend serializer.
     await onToggle(user.pkid, { is_active: !user.is_active });
     setLoading(false);
   };
@@ -53,20 +52,27 @@ const StatusToggle = ({ user, onToggle }) => {
     <button
       onClick={handleToggle}
       disabled={loading}
-      className="flex items-center justify-center"
+      className={`relative inline-flex items-center cursor-pointer ${
+        loading ? "cursor-not-allowed opacity-70" : ""
+      }`}
     >
       {loading ? (
         <Loader2 className="animate-spin text-gray-400" size={20} />
       ) : (
         <div
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-            user.is_active ? "bg-green-500" : "bg-gray-300"
-          }`}
+          className={`group relative bg-white rounded-full duration-300 w-12   h-6 ring-2 
+            ${user.is_active ? "ring-green-500" : "ring-red-500"}
+          `}
         >
-          <span
-            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-              user.is_active ? "translate-x-6" : "translate-x-1"
-            }`}
+          <div
+            className={`absolute top-1/2 -translate-y-1/2  left-0 h-5 w-5  rounded-full flex justify-center items-center transition-transform  duration-300
+              ${
+                user.is_active
+                  ? "translate-x-6 bg-green-500"
+                  : "translate-x-1 bg-red-500"
+              }
+              ${!loading && "group-hover:scale-95"}
+            `}
           />
         </div>
       )}
@@ -109,12 +115,12 @@ const EditRoleModal = ({ user, onClose, onSave }) => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-5 border-b">
-          <h3 className="text-lg font-bold">Edit Role for {user.full_name}</h3>
+          <h3 className="text-lg font-bold">ویرایش نقش برای{user.full_name}</h3>
         </div>
         <div className="p-5 space-y-4">
           <p>
-            Select the new role for this user. Be aware that promoting a user to
-            Admin gives them full access.
+            نقش جدید را برای این کاربر انتخاب کنید. توجه داشته باشید که ارتقا
+            دادن کاربر به مدیر (Admin) دسترسی کامل به او می‌دهد.
           </p>
           <Select
             options={roles}
@@ -122,16 +128,16 @@ const EditRoleModal = ({ user, onClose, onSave }) => {
             onChange={setSelectedRole}
           />
         </div>
-        <div className="p-4 bg-gray-50 flex justify-end gap-3">
-          <button onClick={onClose} className="secondary-btn">
-            Cancel
+        <div className="p-4 bg-gray-50 flex justify-center gap-3 ">
+          <button onClick={onClose} className="secondry-btn">
+            لغو
           </button>
           <button
             onClick={handleSave}
-            className="primary-btn flex items-center justify-center"
+            className=" flex items-center justify-center rounded-md border border-transparent bg-primary px-8 py-3 text-base font-medium text-white hover:bg-white hover:border hover:border-primary hover:text-primary focus:outline-none cursor-pointer  transition-colors duration-500"
             disabled={isSaving}
           >
-            {isSaving ? <Loader2 className="animate-spin" /> : "Save Changes"}
+            {isSaving ? <Loader2 className="animate-spin" /> : "ذخیره تغییرات"}
           </button>
         </div>
       </motion.div>
@@ -204,20 +210,28 @@ export default function UserManagement() {
       </AnimatePresence>
 
       <div className="p-3 md:p-6 w-full">
-        <div className="bg-white p-6 shadow-md rounded-lg max-w-7xl mx-auto">
+        <div className="bg-white p-6  rounded-lg ">
           <h1 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-4 flex items-center gap-3">
-            <FaUsers /> User Management
+            <span className="p-2 rounded-full bg-gray-300">
+              <FaUsers />
+            </span>{" "}
+            <span className="text-xl font-Ray_black text-gray-600">
+              {" "}
+              مدیریت کاربران
+            </span>{" "}
           </h1>
 
-          <div className="mb-4 relative">
-            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <div className="flex items-center mb-4 w-full max-w-md border border-gray-300 rounded-full overflow-hidden">
             <input
               type="text"
-              placeholder="Search by name, email, or username..."
+              placeholder="جستجو بر اساس نام، ایمیل، یا نام کاربری..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full max-w-md pl-10 pr-4 py-2 border border-gray-300 rounded-full"
+              className="flex-grow py-2 pr-5 outline-none text-right placeholder-gray-400"
             />
+            <div className="pl-4 pr-2 text-gray-400">
+              <FaSearch size={20} />
+            </div>
           </div>
 
           <div className="overflow-x-auto">
@@ -226,20 +240,25 @@ export default function UserManagement() {
                 <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
               </div>
             ) : (
-              <table className="w-full text-sm text-left text-gray-500">
-                <thead className="text-xs text-gray-700 uppercase bg-gray-100">
+              <table className="w-full text-sm text-center text-gray-500">
+                <thead className="text-base text-gray-700 uppercase bg-gray-300">
                   <tr>
-                    <th className="px-5 py-3">Full Name</th>
-                    <th className="px-5 py-3">Email</th>
-                    <th className="px-5 py-3">Role</th>
-                    <th className="px-5 py-3">Date Joined</th>
-                    <th className="px-5 py-3 text-center">Active Status</th>
-                    <th className="px-5 py-3 text-center">Actions</th>
+                    <th className="px-5 py-3">نام کامل</th>
+                    <th className="px-5 py-3">ایمیل</th>
+                    <th className="px-5 py-3">نقش</th>
+                    <th className="px-5 py-3">تاریخ پیوستن</th>
+                    <th className="px-5 py-3 text-center">وضعیت فعال</th>
+                    <th className="px-5 py-3 text-center">عملیات</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredUsers.map((user) => (
-                    <tr key={user.pkid} className="border-b hover:bg-gray-50">
+                  {filteredUsers.map((user, index) => (
+                    <tr
+                      key={user.pkid}
+                      className={`border-b hover:bg-gray-50 ${
+                        index % 2 === 0 ? "bg-gray-100" : ""
+                      } `}
+                    >
                       <td className="px-5 py-4 font-medium text-gray-900">
                         {user.full_name}
                       </td>
@@ -256,9 +275,9 @@ export default function UserManagement() {
                       <td className="px-5 py-4 text-center">
                         <button
                           onClick={() => setEditingUser(user)}
-                          className="font-medium text-blue-600 hover:underline"
+                          className="font-medium text-primary hover:underline"
                         >
-                          Edit Role
+                          ویرایش نقش
                         </button>
                       </td>
                     </tr>

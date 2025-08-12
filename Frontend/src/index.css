@@ -40,14 +40,10 @@ body {
     @apply rounded-md border border-transparent bg-primary px-8 py-3 text-base font-medium text-white hover:bg-white hover:border hover:border-primary hover:text-primary focus:outline-none cursor-pointer  transition-colors duration-500 w-full;
   }
 }
+
 @layer components {
   .secondry-btn {
-    @apply bg-green-500 hover:bg-green-500/90 text-sm text-white py-2 px-5 rounded-lg hover:!scale-105 duration-300;
-  }
-}
-@layer components {
-  .tertiary-btn {
-    @apply bg-red-500  hover:bg-red-600 text-sm text-white py-2 px-5 rounded-lg hover:!scale-105 duration-300;
+    @apply rounded-md border border-transparent bg-red-500 px-8 py-3 text-base font-medium text-white hover:bg-white hover:border hover:border-red-500 hover:text-red-500 focus:outline-none cursor-pointer  transition-colors duration-500;
   }
 }
 
@@ -209,6 +205,9 @@ body::-webkit-scrollbar-track {
 }
 .input-field {
   @apply border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-1 ring-black/50;
+}
+.input-field1 {
+  @apply border border-gray-300 rounded-md px-2 py-3 focus:outline-none focus:ring-1 ring-black/50;
 }
 
 .input-field {

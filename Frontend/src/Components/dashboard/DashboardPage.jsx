@@ -48,7 +48,7 @@ const DashboardPage = () => {
               placeholder="Search..."
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
-              className={`pl-10 py-1.5 rounded-full border border-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-300 ease-in-out ${
+              className={`pl-10 py-1.5 pr-5 rounded-full border border-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-300 ease-in-out ${
                 isFocused ? "w-60" : "w-48"
               } bg-gray-50`}
             />

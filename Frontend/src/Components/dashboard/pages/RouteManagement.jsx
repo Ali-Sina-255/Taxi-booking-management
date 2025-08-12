@@ -231,38 +231,41 @@ export default function RouteManagement() {
   return (
     <div className="p-3 md:p-6 w-full px-5">
       <div className="w-full py-4 px-5 shadow-lg bg-white pb-14 rounded-md">
-        <h2 className="text-2xl text-center font-bold mb-6 flex items-center justify-center gap-2">
-          <FaRoute /> {editingRoute ? "Edit Route" : "Create New Route"}
-        </h2>
+        <h1 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-4 flex items-center gap-3">
+          <span className="p-2 rounded-full bg-gray-300">
+            <FaRoute />
+          </span>{" "}
+          <span className="text-xl font-Ray_black text-gray-600">
+            {editingRoute ? "ویرایش مسیر" : "ایجاد مسیر جدید"}
+          </span>{" "}
+        </h1>
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block mb-2 font-medium">Pickup Location</label>
+              <label className="block mb-2 font-medium">مکان سوار شدن</label>
               <Select
                 name="pickup"
                 options={locationOptions}
                 value={formData.pickup}
                 onChange={handleSelectChange}
                 styles={selectStyles}
-                placeholder="Search..."
+                placeholder="جستجو..."
               />
             </div>
             <div>
-              <label className="block mb-2 font-medium">
-                Drop-off Location
-              </label>
+              <label className="block mb-2 font-medium">مکان پیاده شدن</label>
               <Select
                 name="drop"
                 options={locationOptions}
                 value={formData.drop}
                 onChange={handleSelectChange}
                 styles={selectStyles}
-                placeholder="Search..."
+                placeholder="جستجو..."
               />
             </div>
           </div>
           <div>
-            <label className="block mb-2 font-medium">Price (AF)</label>
+            <label className="block mb-2 font-medium">قیمت (افغانی)</label>
             <input
               type="number"
               step="0.01"
@@ -271,15 +274,13 @@ export default function RouteManagement() {
                 setFormData({ ...formData, price_af: e.target.value })
               }
               className="w-full input-field"
-              placeholder="e.g. 250.00"
+              placeholder="مثلاً ۲۵۰.۰۰"
               required
             />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block mb-2 font-medium">
-                Available Drivers
-              </label>
+              <label className="block mb-2 font-medium">رانندگان موجود</label>
               <Select
                 isMulti
                 name="drivers"
@@ -287,13 +288,11 @@ export default function RouteManagement() {
                 value={formData.drivers}
                 onChange={handleSelectChange}
                 styles={selectStyles}
-                placeholder="Select..."
+                placeholder="انتخاب کنید..."
               />
             </div>
             <div>
-              <label className="block mb-2 font-medium">
-                Available Vehicles
-              </label>
+              <label className="block mb-2 font-medium">وسایط موجود</label>
               <Select
                 isMulti
                 name="vehicles"
@@ -301,13 +300,13 @@ export default function RouteManagement() {
                 value={formData.vehicles}
                 onChange={handleSelectChange}
                 styles={selectStyles}
-                placeholder="Select..."
+                placeholder="انتخاب کنید..."
               />
             </div>
           </div>
           <div className="flex justify-center gap-4 pt-4">
             <button type="submit" className="primary-btn">
-              {editingRoute ? "Update Route" : "Create Route"}
+              {editingRoute ? "به‌روزرسانی مسیر" : "ایجاد مسیر"}
             </button>
             {editingRoute && (
               <button
@@ -315,7 +314,7 @@ export default function RouteManagement() {
                 onClick={resetForm}
                 className="secondary-btn"
               >
-                Cancel Edit
+                لغو ویرایش
               </button>
             )}
           </div>
@@ -325,20 +324,20 @@ export default function RouteManagement() {
           id="route-table"
           className="w-full mx-auto bg-white mt-10 border border-gray-200 overflow-x-auto"
         >
-          <table className="w-full text-sm text-left text-gray-500">
-            <thead className="text-xs text-gray-700 uppercase bg-gray-100">
+          <table className="w-full text-sm text-center text-gray-500">
+            <thead className="text-base text-gray-700 uppercase bg-gray-300">
               <tr>
                 <th scope="col" className="px-6 py-3">
-                  Route
+                  مسیر
                 </th>
                 <th scope="col" className="px-6 py-3">
-                  Price
+                  قیمت
                 </th>
                 <th scope="col" className="px-6 py-3">
-                  Assigned Drivers
+                  رانندگان منصوب شده
                 </th>
                 <th scope="col" className="px-6 py-3 text-center">
-                  Actions
+                  عملیات
                 </th>
               </tr>
             </thead>
@@ -351,7 +350,12 @@ export default function RouteManagement() {
                 </tr>
               ) : routes.length > 0 ? (
                 routes.map((route) => (
-                  <tr key={route.pk} className="border-b hover:bg-gray-50">
+                  <tr
+                    key={route.pk}
+                    className={`border-b hover:bg-gray-50 ${
+                      index % 2 === 0 ? "bg-gray-100" : ""
+                    } `}
+                  >
                     <td className="px-6 py-4 font-medium text-gray-900">
                       {route.pickup.name} ➜ {route.drop.name}
                     </td>
@@ -386,7 +390,7 @@ export default function RouteManagement() {
               ) : (
                 <tr>
                   <td colSpan="4" className="text-center py-10 text-gray-500">
-                    No routes have been created yet.
+                    هنوز هیچ مسیری ایجاد نشده است{" "}
                   </td>
                 </tr>
               )}

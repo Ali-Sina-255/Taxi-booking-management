@@ -172,7 +172,7 @@ const FilterControls = ({ activeFilter, setActiveFilter }) => {
           onClick={() => setActiveFilter(option.value)}
           className={`px-4 py-2 text-sm font-semibold rounded-full transition-colors duration-200 ${
             activeFilter === option.value
-              ? "bg-blue-600 text-white shadow"
+              ? "bg-primary text-white shadow"
               : "bg-gray-200 text-gray-700 hover:bg-gray-300"
           }`}
         >
@@ -266,9 +266,14 @@ export default function AdminTripManagement() {
       </AnimatePresence>
 
       <div className="p-3 md:p-6 w-full">
-        <div className="bg-white p-6 shadow-md rounded-lg max-w-7xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-800 mb-4 border-b pb-4 flex items-center gap-3">
-            <FaTaxi /> Trip Management
+        <div className="bg-white p-6  rounded-lg ">
+          <h1 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-4 flex items-center gap-3">
+            <span className="p-2 rounded-full bg-gray-300">
+              <FaTaxi />
+            </span>{" "}
+            <span className="text-xl font-Ray_black text-gray-600">
+              مدیریت سفرها
+            </span>{" "}
           </h1>
 
           {/* --- NEW: Add the filter controls UI --- */}
@@ -283,22 +288,27 @@ export default function AdminTripManagement() {
                 <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
               </div>
             ) : (
-              <table className="w-full text-sm text-left text-gray-500">
-                <thead className="text-xs text-gray-700 uppercase bg-gray-100">
+              <table className="w-full text-sm text-center text-gray-500">
+                <thead className="text-base text-gray-700 uppercase bg-gray-300">
                   <tr>
-                    <th className="px-5 py-3">Passenger</th>
-                    <th className="px-5 py-3">Route</th>
-                    <th className="px-5 py-3">Date</th>
-                    <th className="px-5 py-3">Details</th>
-                    <th className="px-5 py-3">Status</th>
-                    <th className="px-5 py-3 text-center">Action</th>
+                    <th className="px-5 py-3">مسافر</th>
+                    <th className="px-5 py-3">مسیر</th>
+                    <th className="px-5 py-3">تاریخ</th>
+                    <th className="px-5 py-3">جزئیات</th>
+                    <th className="px-5 py-3">وضعیت</th>
+                    <th className="px-5 py-3 text-center">عملیات</th>
                   </tr>
                 </thead>
                 <tbody>
                   {/* --- UPDATED: Map over `filteredTrips` instead of `trips` --- */}
                   {filteredTrips.length > 0 ? (
-                    filteredTrips.map((trip) => (
-                      <tr key={trip.id} className="border-b hover:bg-gray-50">
+                    filteredTrips.map((trip, index) => (
+                      <tr
+                        key={trip.id}
+                        className={`border-b hover:bg-gray-50 ${
+                          index % 2 === 0 ? "bg-gray-100" : ""
+                        } `}
+                      >
                         <td className="px-5 py-4 font-medium">
                           {trip.passenger}
                         </td>
@@ -309,7 +319,7 @@ export default function AdminTripManagement() {
                           {trip.scheduled_for ? (
                             <div className="text-blue-700">
                               <span className="font-semibold block">
-                                Scheduled
+                                زمان‌بندی‌شده
                               </span>
                               <span className="text-xs">
                                 {new Date(trip.scheduled_for).toLocaleString()}
@@ -318,7 +328,7 @@ export default function AdminTripManagement() {
                           ) : (
                             <div>
                               <span className="font-semibold block">
-                                Requested
+                                درخواست شده
                               </span>
                               <span className="text-xs">
                                 {new Date(trip.request_time).toLocaleString()}
@@ -354,7 +364,7 @@ export default function AdminTripManagement() {
                               onClick={() => setAssigningTrip(trip)}
                               className="secondary-btn"
                             >
-                              Assign Driver
+                              تعیین راننده
                             </button>
                           ) : (
                             <span className="font-medium text-gray-800">
@@ -371,7 +381,7 @@ export default function AdminTripManagement() {
                         colSpan="6"
                         className="text-center py-16 text-gray-500"
                       >
-                        No trips found for the selected filter.
+                        سفری با فیلتر انتخاب‌شده یافت نشد.
                       </td>
                     </tr>
                   )}
