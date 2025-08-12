@@ -2,34 +2,54 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import Swal from "sweetalert2";
-import { Loader2, Send, Users, Calendar, MessageSquare } from "lucide-react";
+import {
+  Loader2,
+  Send,
+  Users,
+  Calendar,
+  MessageSquare,
+  MapPin,
+  ArrowRight,
+} from "lucide-react";
+import Select from "react-select";
+import { AnimatePresence, motion } from "framer-motion";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || "http://127.0.0.1:8000";
 
+const selectStyles = {
+  control: (provided) => ({
+    ...provided,
+    padding: "0.5rem",
+    borderRadius: "0.5rem",
+    border: "1px solid #e5e7eb",
+    boxShadow: "none",
+    "&:hover": { borderColor: "#9ca3af" },
+  }),
+  option: (provided, state) => ({
+    ...provided,
+    backgroundColor: state.isSelected
+      ? "#2563eb"
+      : state.isFocused
+      ? "#dbeafe"
+      : "white",
+    color: state.isSelected ? "white" : "black",
+  }),
+};
+
 export default function City() {
-  // Get the authentication token from the Redux store
   const accessToken = useSelector((state) => state.user.accessToken);
-
-  // State for data fetched from the API
   const [routes, setRoutes] = useState([]);
-
-  // State for the component's UI and form flow
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [requested, setRequested] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false); // For the confirmation modal
-
-  // State for all form fields, including the new details
-  const [selectedPickup, setSelectedPickup] = useState("");
-  const [selectedDropoff, setSelectedDropoff] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedRoute, setSelectedRoute] = useState(null);
   const [passengerCount, setPassengerCount] = useState(1);
   const [notes, setNotes] = useState("");
   const [isScheduled, setIsScheduled] = useState(false);
   const [scheduledDateTime, setScheduledDateTime] = useState("");
 
-  // --- Data Fetching ---
   const fetchData = useCallback(async () => {
-    // If the user isn't logged in, don't try to fetch data
     if (!accessToken) {
       setLoading(false);
       return;
@@ -45,7 +65,6 @@ export default function City() {
       setRoutes(routesRes.data.results || routesRes.data || []);
     } catch (error) {
       console.error("Error fetching route data:", error);
-      // Don't show a popup here, the component will render a message
     } finally {
       setLoading(false);
     }
@@ -55,53 +74,27 @@ export default function City() {
     fetchData();
   }, [fetchData]);
 
-  // --- Dynamic Logic for Dropdowns (Memoized for performance) ---
-  const pickupLocations = useMemo(() => {
-    const locations = new Map();
-    routes.forEach((route) => {
-      if (!locations.has(route.pickup.id)) {
-        locations.set(route.pickup.id, route.pickup);
-      }
-    });
-    return Array.from(locations.values());
+  const routeOptions = useMemo(() => {
+    return routes.map((route) => ({
+      value: route,
+      label: `${route.pickup.name} ➜ ${route.drop.name}`,
+    }));
   }, [routes]);
 
-  const dropoffLocations = useMemo(() => {
-    if (!selectedPickup) return [];
-    return routes
-      .filter((route) => route.pickup.id === selectedPickup)
-      .map((route) => route.drop);
-  }, [selectedPickup, routes]);
-
-  const selectedRoute = useMemo(() => {
-    if (!selectedPickup || !selectedDropoff) return null;
-    return routes.find(
-      (route) =>
-        route.pickup.id === selectedPickup && route.drop.id === selectedDropoff
-    );
-  }, [selectedPickup, selectedDropoff, routes]);
-
-  // --- Event Handlers ---
-  const handlePickupChange = (e) => {
-    setSelectedPickup(e.target.value);
-    setSelectedDropoff("");
-  };
-
-  // Step 1 of submission: Validate form and open the confirmation modal
   const handleReviewTrip = (e) => {
     e.preventDefault();
     if (!selectedRoute) {
       Swal.fire(
-        "مسیر نامعتبر",
-        "لطفا یک مبدا و مقصد معتبر انتخاب کنید.",
+        "Route Required",
+        "Please select a route for your trip.",
         "warning"
       );
       return;
     }
     if (isScheduled && !scheduledDateTime) {
       Swal.fire(
-        "زمان لازم است",
-        "لطفا تاریخ و زمان حرکت را مشخص کنید.",
+        "Time Required",
+        "Please specify the date and time for your trip.",
         "warning"
       );
       return;
@@ -109,14 +102,11 @@ export default function City() {
     setIsModalOpen(true);
   };
 
-  // Step 2 of submission: Send the data to the backend after user confirms
   const handleConfirmAndSubmit = async () => {
     setIsModalOpen(false);
     setSubmitting(true);
-
-    // Construct payload with all details to match the backend serializer
     const payload = {
-      route_id: selectedRoute.pk,
+      route_id: selectedRoute.value.pk,
       passenger_count: passengerCount,
       notes_for_driver: notes,
       scheduled_for: isScheduled ? scheduledDateTime : null,
@@ -127,13 +117,15 @@ export default function City() {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       setRequested(true);
+      // --- THIS IS THE FIX ---
+      // Added the required curly braces {} around the catch block.
     } catch (error) {
       console.error("Error submitting trip request:", error);
       const errorMsg =
         error.response?.data?.detail ||
         JSON.stringify(error.response?.data) ||
-        "مشکلی پیش آمد.";
-      Swal.fire("خطا در ارسال", errorMsg, "error");
+        "An error occurred.";
+      Swal.fire("Submission Failed", errorMsg, "error");
     } finally {
       setSubmitting(false);
     }
@@ -141,17 +133,13 @@ export default function City() {
 
   const resetForm = () => {
     setRequested(false);
-    setSelectedPickup("");
-    setSelectedDropoff("");
+    setSelectedRoute(null);
     setPassengerCount(1);
     setNotes("");
     setIsScheduled(false);
     setScheduledDateTime("");
   };
 
-  // --- Component Render Logic ---
-
-  // Show a message if the user is not logged in
   if (!accessToken) {
     return (
       <div className="flex items-center justify-center h-screen text-center p-4">
@@ -170,164 +158,187 @@ export default function City() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8" dir="rtl">
-      {/* --- Main Form Section --- */}
-      <section className="max-w-md mx-auto bg-white p-8 rounded-lg shadow-xl">
-        {loading ? (
-          <div className="text-center p-8">
-            <Loader2 className="animate-spin text-blue-600" size={48} />
-          </div>
-        ) : requested ? (
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-green-600 mb-4">
-              درخواست شما با موفقیت ثبت شد!
+    <div
+      className="min-h-screen bg-gray-100 p-4 md:p-8 flex items-center justify-center"
+      dir="rtl"
+    >
+      <AnimatePresence>
+        {requested ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center bg-white p-10 rounded-xl shadow-2xl"
+          >
+            <h2 className="text-3xl font-bold text-green-600 mb-4">
+              درخواست شما ثبت شد!
             </h2>
-            <p className="text-gray-600 mb-6">
-              می‌توانید وضعیت سفر خود را در بخش «سفرهای من» دنبال کنید.
+            <p className="text-gray-600 mb-8 max-w-sm">
+              می‌توانید وضعیت سفر خود را در بخش «سفرهای من» دنبال کنید. راننده
+              به زودی تعیین خواهد شد.
             </p>
             <button onClick={resetForm} className="primary-btn w-full">
               ثبت یک درخواست دیگر
             </button>
-          </div>
+          </motion.div>
         ) : (
-          <>
-            <h2 className="text-2xl font-semibold mb-6 text-center">
-              درخواست سفر جدید
-            </h2>
-            <form onSubmit={handleReviewTrip} className="flex flex-col gap-6">
-              {/* Route Selection */}
-              <div>
-                <label
-                  htmlFor="fromCity"
-                  className="block mb-2 font-medium text-gray-700"
-                >
-                  شهر مبدا
-                </label>
-                <select
-                  id="fromCity"
-                  value={selectedPickup}
-                  onChange={handlePickupChange}
-                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50"
-                  required
-                >
-                  <option value="" disabled>
-                    انتخاب کنید...
-                  </option>
-                  {pickupLocations.map((loc) => (
-                    <option key={loc.id} value={loc.id}>
-                      {loc.name}
-                    </option>
-                  ))}
-                </select>
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-xl w-full mx-auto bg-white p-8 rounded-xl shadow-2xl"
+          >
+            {loading ? (
+              <div className="text-center p-8">
+                <Loader2 className="animate-spin text-blue-600" size={48} />
               </div>
-              <div>
-                <label
-                  htmlFor="toCity"
-                  className="block mb-2 font-medium text-gray-700"
-                >
-                  شهر مقصد
-                </label>
-                <select
-                  id="toCity"
-                  value={selectedDropoff}
-                  onChange={(e) => setSelectedDropoff(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-md bg-gray-50"
-                  required
-                  disabled={!selectedPickup}
-                >
-                  <option value="" disabled>
-                    ابتدا شهر مبدا را انتخاب کنید...
-                  </option>
-                  {dropoffLocations.map((loc) => (
-                    <option key={loc.id} value={loc.id}>
-                      {loc.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* --- NEW DETAILED FORM FIELDS --- */}
-              <div>
-                <label
-                  htmlFor="passengerCount"
-                  className="block mb-2 font-medium text-gray-700"
-                >
-                  تعداد مسافر
-                </label>
-                <input
-                  type="number"
-                  id="passengerCount"
-                  value={passengerCount}
-                  onChange={(e) => setPassengerCount(Number(e.target.value))}
-                  min="1"
-                  max="10"
-                  className="w-full p-3 border border-gray-300 rounded-md"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="notes"
-                  className="block mb-2 font-medium text-gray-700"
-                >
-                  یادداشت برای راننده (اختیاری)
-                </label>
-                <textarea
-                  id="notes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  rows="3"
-                  placeholder="مثال: من نزدیک دروازه آبی هستم و یک چمدان بزرگ دارم."
-                  className="w-full p-3 border border-gray-300 rounded-md"
-                />
-              </div>
-              <div className="border-t pt-4">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={isScheduled}
-                    onChange={(e) => setIsScheduled(e.target.checked)}
-                    className="h-5 w-5 rounded text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="font-medium">سفر برای بعدا رزرو شود؟</span>
-                </label>
-                {isScheduled && (
-                  <div className="mt-4 transition-all duration-300">
-                    <label
-                      htmlFor="scheduledDateTime"
-                      className="block mb-2 font-medium text-gray-700"
-                    >
-                      تاریخ و زمان حرکت
+            ) : (
+              <>
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl font-bold text-gray-800">
+                    سفر خود را رزرو کنید
+                  </h2>
+                  <p className="text-gray-500 mt-2">
+                    مقصد خود را انتخاب کنید و بقیه را به ما بسپارید.
+                  </p>
+                </div>
+                <form onSubmit={handleReviewTrip} className="space-y-6">
+                  <div>
+                    <label className="block mb-2 font-bold text-gray-700">
+                      کجا می‌روید؟
                     </label>
-                    <input
-                      type="datetime-local"
-                      id="scheduledDateTime"
-                      value={scheduledDateTime}
-                      onChange={(e) => setScheduledDateTime(e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded-md"
-                      required
+                    <Select
+                      options={routeOptions}
+                      value={selectedRoute}
+                      onChange={setSelectedRoute}
+                      styles={selectStyles}
+                      placeholder="جستجوی مبدا و مقصد..."
+                      isClearable
                     />
                   </div>
-                )}
-              </div>
 
-              <button
-                type="submit"
-                className="primary-btn w-full flex items-center justify-center gap-2 py-3"
-                disabled={!selectedRoute || submitting}
-              >
-                {submitting ? (
-                  <Loader2 className="animate-spin" />
-                ) : (
-                  <Send size={20} />
-                )}
-                بررسی و درخواست
-              </button>
-            </form>
-          </>
+                  <AnimatePresence>
+                    {selectedRoute && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden space-y-6"
+                      >
+                        <div className="bg-gray-50 p-4 rounded-lg border">
+                          <div className="flex justify-between items-center text-lg">
+                            <span className="flex items-center gap-2 font-semibold text-gray-700">
+                              <MapPin size={20} />{" "}
+                              {selectedRoute.value.pickup.name}
+                            </span>
+                            <ArrowRight size={20} className="text-gray-400" />
+                            <span className="flex items-center gap-2 font-semibold text-gray-700">
+                              {selectedRoute.value.drop.name}{" "}
+                              <MapPin size={20} />
+                            </span>
+                          </div>
+                          <div className="text-center mt-3 pt-3 border-t">
+                            <span className="text-gray-500">قیمت تخمینی:</span>
+                            <span className="font-bold text-2xl text-green-600 ml-2">
+                              {selectedRoute.value.price_af}
+                            </span>
+                            <span className="text-sm">افغانی</span>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="passengerCount"
+                            className="block mb-2 font-bold text-gray-700"
+                          >
+                            تعداد مسافر
+                          </label>
+                          <input
+                            type="number"
+                            id="passengerCount"
+                            value={passengerCount}
+                            onChange={(e) =>
+                              setPassengerCount(Number(e.target.value))
+                            }
+                            min="1"
+                            max="10"
+                            className="w-full input-field"
+                          />
+                        </div>
+                        <div>
+                          <label
+                            htmlFor="notes"
+                            className="block mb-2 font-bold text-gray-700"
+                          >
+                            یادداشت برای راننده (اختیاری)
+                          </label>
+                          <textarea
+                            id="notes"
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                            rows="3"
+                            placeholder="مثال: من نزدیک دروازه آبی هستم..."
+                            className="w-full input-field"
+                          />
+                        </div>
+                        <div className="border-t pt-6">
+                          <label className="flex items-center gap-3 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={isScheduled}
+                              onChange={(e) => setIsScheduled(e.target.checked)}
+                              className="h-5 w-5 rounded text-blue-600 focus:ring-blue-500"
+                            />
+                            <span className="font-semibold">
+                              سفر برای بعدا رزرو شود؟
+                            </span>
+                          </label>
+                          {isScheduled && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              className="mt-4"
+                            >
+                              <label
+                                htmlFor="scheduledDateTime"
+                                className="block mb-2 font-bold text-gray-700"
+                              >
+                                تاریخ و زمان حرکت
+                              </label>
+                              <input
+                                type="datetime-local"
+                                id="scheduledDateTime"
+                                value={scheduledDateTime}
+                                onChange={(e) =>
+                                  setScheduledDateTime(e.target.value)
+                                }
+                                className="w-full input-field"
+                                required
+                              />
+                            </motion.div>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <button
+                    type="submit"
+                    className="primary-btn w-full flex items-center justify-center gap-2 py-3.5 text-lg"
+                    disabled={!selectedRoute || submitting}
+                  >
+                    {submitting ? (
+                      <Loader2 className="animate-spin" />
+                    ) : (
+                      <Send size={20} />
+                    )}
+                    بررسی و درخواست
+                  </button>
+                </form>
+              </>
+            )}
+          </motion.section>
         )}
-      </section>
+      </AnimatePresence>
 
-      {/* --- CONFIRMATION MODAL --- */}
       {isModalOpen && selectedRoute && (
         <div
           className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4 transition-opacity"
@@ -344,7 +355,8 @@ export default function City() {
               <div className="flex justify-between items-center border-b pb-3">
                 <span className="font-semibold text-gray-600">مسیر:</span>
                 <span className="font-bold text-lg">
-                  {selectedRoute.pickup.name} ➜ {selectedRoute.drop.name}
+                  {selectedRoute.value.pickup.name} ➜{" "}
+                  {selectedRoute.value.drop.name}
                 </span>
               </div>
               <div className="flex justify-between items-center border-b pb-3">
@@ -352,7 +364,7 @@ export default function City() {
                   کرایه تخمینی:
                 </span>
                 <span className="font-bold text-lg text-green-600">
-                  {selectedRoute.price_af} افغانی
+                  {selectedRoute.value.price_af} افغانی
                 </span>
               </div>
               <div className="flex justify-between items-center border-b pb-3">

@@ -3,11 +3,11 @@ import storage from "redux-persist/lib/storage";
 import { persistReducer, persistStore } from "redux-persist";
 import userReducer, { injectStore } from "./userSlice/userSlice.js";
 import themeReducer from "./Theme/themeSlice";
-import checkoutReducer from "./checkoutSlice/checkoutSlice";
+// import checkoutReducer from "./checkoutSlice/checkoutSlice";
 const rootReducer = combineReducers({
   user: userReducer,
   theme: themeReducer,
-  checkout: checkoutReducer,
+  // checkout: checkoutReducer,
   userSettings: userReducer,
 });
 const persistConfig = {

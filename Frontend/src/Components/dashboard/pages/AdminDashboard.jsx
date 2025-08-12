@@ -7,7 +7,6 @@ import axios from "axios";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || "http://127.0.0.1:8000";
-
 // Standard API client for making authenticated requests
 const createApiClient = () => {
   const api = axios.create({ baseURL: BASE_URL });

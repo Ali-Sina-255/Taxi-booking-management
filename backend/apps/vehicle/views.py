@@ -85,7 +85,7 @@ class RouteViewSet(viewsets.ModelViewSet):
 
 class TripRequestCreateView(generics.ListCreateAPIView):
     serializer_class = TripRequestSerializer
-    permission_classes = [IsPassenger]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         return Trip.objects.filter(passenger=self.request.user)
