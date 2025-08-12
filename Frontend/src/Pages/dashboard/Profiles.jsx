@@ -17,31 +17,31 @@ const FormInput = ({
   icon: Icon,
   rules = { required: `${label} is required.` },
 }) => (
-  <div className="relative">
+  <div className="relative" dir="rtl">
     <Controller
       name={name}
       control={control}
       rules={rules}
       render={({ field }) => (
         <>
-         
           <input
             {...field}
             type={type}
             placeholder={label}
-            className={`peer block w-full rounded-lg border focus:outline-none border-gray-300 py-3 shadow-sm transition-colors duration-200  ${
-              Icon ? "pl-4" : "pl-4"
-            } pr-4 placeholder-transparent`}
+            className={`peer block w-full rounded-lg border focus:outline-none border-gray-300 py-3 shadow-sm transition-colors duration-200 ${
+              Icon ? "pr-4" : "pr-4"
+            } pl-4 placeholder-transparent text-right`}
+            id={name}
           />
           <label
             htmlFor={name}
-            className={`absolute left-4 bg-white px-1 transition-all duration-200 pointer-events-none
-    ${
-      field.value && field.value.length > 0
-        ? "-top-2 text-xs text-black"
-        : "top-1/2 -translate-y-1/2 text-gray-400 peer-focus:-top-2 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:text-black"
-    }
-  `}
+            className={`absolute right-4 bg-white px-1 transition-all duration-200 pointer-events-none
+            ${
+              field.value && field.value.length > 0
+                ? "-top-2 text-xs text-black"
+                : "top-1/2 -translate-y-1/2 text-gray-400 peer-focus:-top-2 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:text-black"
+            }
+          `}
           >
             {label}
           </label>
@@ -49,7 +49,9 @@ const FormInput = ({
       )}
     />
     {errors[name] && (
-      <p className="mt-1 text-xs text-red-600">{errors[name].message}</p>
+      <p className="mt-1 text-xs text-red-600 text-right">
+        {errors[name].message}
+      </p>
     )}
   </div>
 );
@@ -173,14 +175,14 @@ function Profile() {
               <FormInput
                 control={control}
                 name="username"
-                label="Username"
+                label="نام کاربری"
                 errors={errors}
                 icon={User}
               />
               <FormInput
                 control={control}
                 name="email"
-                label="Email"
+                label="ایمیل"
                 type="email"
                 errors={errors}
                 icon={Mail}
@@ -188,28 +190,28 @@ function Profile() {
               <FormInput
                 control={control}
                 name="first_name"
-                label="First Name"
+                label="نام"
                 errors={errors}
                 icon={User}
               />
               <FormInput
                 control={control}
                 name="last_name"
-                label="Last Name"
+                label="نام خانوادگی"
                 errors={errors}
                 icon={User}
               />
               <FormInput
                 control={control}
                 name="phone_number"
-                label="Phone Number"
+                label="شماره تلفن"
                 errors={errors}
                 icon={Phone}
               />
               <FormInput
                 control={control}
                 name="city"
-                label="City"
+                label="شهر"
                 errors={errors}
                 icon={Home}
               />
@@ -219,7 +221,7 @@ function Profile() {
           {/* About Me Section */}
           <div>
             <h2 className="text-xl font-semibold text-gray-700 mb-4">
-              About Me
+              درباره من
             </h2>
             <Controller
               name="about_me"
@@ -244,7 +246,7 @@ function Profile() {
           {/* Additional Details Section */}
           <div>
             <h2 className="text-xl font-semibold text-gray-700 mb-4">
-              Additional Details
+              جزئیات بیشتر
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Controller
@@ -253,11 +255,11 @@ function Profile() {
                 render={({ field }) => (
                   <select
                     {...field}
-                    className="w-full rounded-lg border-gray-300 py-3 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    className="w-full rounded-lg border-gray-300 py-3 border  focus:ring-1 ring-black/50 focus:ring-indigo-200 focus:ring-opacity-50"
                   >
-                    <option value="M">Male</option>
-                    <option value="F">Female</option>
-                    <option value="O">Other</option>
+                    <option value="M">مذکر</option>
+                    <option value="F">مونث</option>
+                    <option value="O">دیگر</option>
                   </select>
                 )}
               />
@@ -268,14 +270,14 @@ function Profile() {
                 render={({ field }) => (
                   <select
                     {...field}
-                    className={`w-full rounded-lg border-gray-300 py-3 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 ${
+                    className={`w-full rounded-lg border-gray-300 py-3 border  focus:ring-1 ring-black/50 focus:ring-indigo-200 focus:ring-opacity-50 ${
                       errors.country ? "border-red-600" : ""
                     }`}
                   >
-                    <option value="">Select Country</option>
-                    <option value="AF">Afghanistan</option>
-                    <option value="US">USA</option>
-                    <option value="UK">UK</option>
+                    <option value="">کشور را انتخاب کنید</option>
+                    <option value="AF">افغانستان</option>
+                    <option value="US">ایالات متحده آمریکا</option>
+                    <option value="UK">بریتانیا</option>
                   </select>
                 )}
               />
@@ -288,16 +290,16 @@ function Profile() {
           </div>
 
           {/* Form Actions */}
-          <div className="pt-6 border-t border-gray-200 flex justify-center md:justify-end">
+          <div className="pt-6 border-t border-gray-200 flex justify-center">
             <button
               type="submit"
               disabled={loading}
-              className="flex items-center justify-center px-6 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center justify-center px-6 py-2.5 bg-primary text-white font-semibold rounded-lg shadow-md hover:bg-primary/500 focus:outline-none  disabled:cursor-not-allowed transition-colors"
             >
               {loading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
-                "Save Changes"
+                "ذخیره تغییرات"
               )}
             </button>
           </div>

@@ -70,13 +70,13 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
 
     // Driver-only links
     {
-      name: "My Vehicles",
+      name: "وسایط من",
       value: "vehicles",
       icon: <FaCar />,
       roles: ["driver"],
     },
     {
-      name: "Trip Requests",
+      name: "درخواست سفر",
       value: "trip-requests",
       icon: <FaListAlt />,
       roles: ["driver"],
@@ -84,13 +84,13 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
 
     // Passenger-only links
     {
-      name: "Request Trip",
+      name: " درخواست سفر",
       value: "request-trip",
       icon: <FaTaxi />,
       roles: ["passenger"],
     },
     {
-      name: "My Trips",
+      name: "سفرهای من",
       value: "my-trips",
       icon: <FaListAlt />,
       roles: ["passenger"],

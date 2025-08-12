@@ -89,9 +89,9 @@ export default function DriverTripList() {
 
   return (
     <div className="p-3 md:p-6 w-full">
-      <div className="bg-white p-6 shadow-md rounded-lg max-w-6xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-4 flex items-center gap-3">
-          <FaListAlt /> My Assigned Trips
+      <div className="bg-white p-6 shadow-md rounded-lg ">
+        <h1 className="text-2xl text-center font-bold font-Ray_black text-gray-800 mb-6 border-b pb-4 flex items-center justify-center gap-3">
+          <FaListAlt /> سفرهای تخصیص یافته من
         </h1>
 
         <div className="overflow-x-auto">
@@ -100,33 +100,38 @@ export default function DriverTripList() {
               <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
             </div>
           ) : (
-            <table className="w-full text-sm text-left text-gray-500">
-              <thead className="text-xs text-gray-700 uppercase bg-gray-100">
+            <table className="w-full text-sm text-center text-gray-500">
+              <thead className="text-base text-gray-700 uppercase bg-gray-300">
                 <tr>
                   <th scope="col" className="px-6 py-3">
-                    Passenger
+                    مسافر
                   </th>
                   <th scope="col" className="px-6 py-3">
-                    Route
+                    مسیر
                   </th>
                   <th scope="col" className="px-6 py-3">
-                    Fare
+                    کرایه
                   </th>
                   <th scope="col" className="px-6 py-3">
-                    Date
+                    تاریخ
                   </th>
                   <th scope="col" className="px-6 py-3 text-center">
-                    Status
+                    وضعیت
                   </th>
                   <th scope="col" className="px-6 py-3 text-center">
-                    Actions
+                    عملیات
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {Array.isArray(trips) && trips.length > 0 ? (
-                  trips.map((trip) => (
-                    <tr key={trip.id} className="border-b hover:bg-gray-50">
+                  trips.map((trip, index) => (
+                    <tr
+                      key={trip.id}
+                      className={`border-b hover:bg-gray-50 ${
+                        index % 2 === 1 ? "bg-gray-100" : ""
+                      } `}
+                    >
                       <td className="px-6 py-4 font-medium text-gray-900">
                         {trip.passenger_name}
                       </td>
@@ -181,7 +186,7 @@ export default function DriverTripList() {
                 ) : (
                   <tr>
                     <td colSpan="6" className="text-center py-16 text-gray-500">
-                      You have no assigned trips at the moment.
+                      در حال حاضر هیچ سفر تخصیص یافته‌ای ندارید.
                     </td>
                   </tr>
                 )}

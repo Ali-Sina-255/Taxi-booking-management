@@ -12,7 +12,7 @@ import RequestTrip from "./pages/RequestTrip.jsx";
 import MyTrips from "./pages/MyTrips.jsx";
 import DriverTripList from "./pages/DriverTripList.jsx";
 import AdminTripManagement from "./pages/AdminTripManagement.jsx";
-import DriverApplications from "./pages/DriverApplications"; 
+import DriverApplications from "./pages/DriverApplications";
 // A simple placeholder for components we haven't built yet
 const Placeholder = ({ title }) => (
   <div className="p-8">
@@ -82,7 +82,7 @@ const MainContent = ({ activeComponent }) => {
     }
   };
 
-  return <div className="min-h-full bg-gray-100">{renderContent()}</div>;
+  return <div className="min-h-full bg-gray-200">{renderContent()}</div>;
 };
 
 export default MainContent;

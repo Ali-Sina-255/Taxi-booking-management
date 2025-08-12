@@ -205,12 +205,16 @@ export default function VehicleManagement() {
 
   return (
     <div className="p-3 md:p-6 w-full px-5">
-      <div className="w-full py-4 px-5 shadow-lg bg-white pb-14 rounded-md">
-        <h2 className="text-2xl text-center font-bold mb-6 flex items-center justify-center gap-2">
-          <FaCar /> {editingVehicle ? "Edit Vehicle" : "Manage Vehicles"}
+      <div className="w-full py-4 px-5  bg-gray-200 pb-14 rounded-md">
+        <h2 className="text-2xl text-center font-Ray_black mb-6 flex items-center justify-center gap-2">
+          <FaCar />{" "}
+          {editingVehicle ? "ویرایش وسیله نقلیه " : "مدیریت وسایط نقلیه"}
         </h2>
 
-        <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          className="max-w-2xl mx-auto space-y-6 bg-white p-5 rounded-lg"
+        >
           {/* --- NEW: This entire div is now conditional and only shows for Admins --- */}
           {profile?.role === "admin" && (
             <div>
@@ -221,7 +225,7 @@ export default function VehicleManagement() {
                 value={formData.driver}
                 onChange={handleSelectChange}
                 styles={selectStyles}
-                placeholder="Select a driver..."
+                placeholder="یک راننده انتخاب کنید..."
                 isLoading={!driverOptions.length}
               />
             </div>
@@ -229,18 +233,18 @@ export default function VehicleManagement() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block mb-2 font-medium">Vehicle Model</label>
+              <label className="block mb-2 font-medium">مدل وسیله نقلیه</label>
               <input
                 name="model"
                 value={formData.model}
                 onChange={handleInputChange}
                 className="w-full input-field"
-                placeholder="e.g., Toyota Corolla"
+                placeholder="مثلاً، تویوتا کرولا"
                 required
               />
             </div>
             <div>
-              <label className="block mb-2 font-medium">Plate Number</label>
+              <label className="block mb-2 font-medium">شماره پلیت</label>
               <input
                 name="plate_number"
                 value={formData.plate_number}
@@ -252,50 +256,67 @@ export default function VehicleManagement() {
             </div>
           </div>
           <div>
-            <label className="block mb-2 font-medium">Vehicle Type</label>
+            <label className="block mb-2 font-medium">نوع وسیله نقلیه</label>
             <select
               name="type"
               value={formData.type}
               onChange={handleInputChange}
               className="w-full input-field"
             >
-              <option value="economy">Economy</option>
-              <option value="luxury">Luxury</option>
-              <option value="suv">SUV</option>
-              <option value="van">Van</option>
-              <option value="electric">Electric</option>
+              <option value="economy">اقتصادی</option>
+              <option value="luxury">لوکس</option>
+              <option value="suv">موتر SUV</option>
+              <option value="van">وان</option>
+              <option value="electric">برقی</option>
             </select>
           </div>
           <div>
             <label className="block mb-2 font-medium">
-              {editingVehicle
-                ? "Upload New License (Optional)"
-                : "Driver's License"}
+              {editingVehicle ? "بارگذاری جواز جدید (اختیاری)" : "جواز راننده"}
             </label>
             <input
               type="file"
               name="license"
               onChange={handleFileChange}
-              className="w-full file-input"
+              className="w-full
+             px-3 py-2
+             border border-gray-300
+             rounded-md
+             cursor-pointer
+             text-gray-700
+             focus:outline-none focus:ring-2 focus:ring-black/50
+             file:bg-primary
+             file:text-white
+             file:px-4
+             file:py-2
+             file:border-0
+             file:rounded-md
+             file:cursor-pointer
+             file:hover:bg-primary/50
+             transition
+             file:placeholder
+             
+             "
               required={!editingVehicle}
             />
+
             {editingVehicle && (
               <p className="text-xs text-gray-500 mt-1">
-                Leave blank to keep the current license.
+                خالی بگذارید تا جواز فعلی حفظ شود
               </p>
             )}
           </div>
           <div className="flex justify-center gap-4 pt-4">
             <button type="submit" className="primary-btn">
-              {editingVehicle ? "Update Vehicle" : "Create Vehicle"}
+              {editingVehicle ? "به‌روزرسانی وسیله نقلیه" : "ایجاد وسیله نقلیه"}
             </button>
             {editingVehicle && (
               <button
                 type="button"
                 onClick={resetForm}
-                className="secondary-btn"
+                className="bg-red-500 py-2 px-5 rounded-lg text-white hover:bg-red-400"
               >
-                Cancel Edit
+                لغو ویرایش
               </button>
             )}
           </div>
@@ -303,28 +324,28 @@ export default function VehicleManagement() {
 
         <div
           id="vehicle-table"
-          className="w-full mx-auto bg-white mt-10 border border-gray-200 overflow-x-auto"
+          className="w-full mx-auto bg-white mt-10 border border-gray-200 overflow-x-auto rounded-lg"
         >
-          <h3 className="text-xl font-bold p-4 bg-gray-50 border-b">
-            Existing Vehicles
+          <h3 className="text-xl text-center font-Ray_black font-bold p-4 bg-gray-50 border-b">
+            وسایط موجود
           </h3>
-          <table className="w-full text-sm text-left text-gray-500">
-            <thead className="text-xs text-gray-700 uppercase bg-gray-100">
+          <table className="w-full text-sm text-center text-gray-500">
+            <thead className="text-base text-gray-700 uppercase bg-gray-300">
               <tr>
                 <th scope="col" className="px-6 py-3">
-                  Model
+                  مدل
                 </th>
                 <th scope="col" className="px-6 py-3">
-                  Plate No.
+                  شماره پلیت
                 </th>
                 <th scope="col" className="px-6 py-3">
-                  Type
+                  نوع
                 </th>
                 <th scope="col" className="px-6 py-3">
-                  Driver
+                  راننده
                 </th>
                 <th scope="col" className="px-6 py-3 text-center">
-                  Actions
+                  عملیات
                 </th>
               </tr>
             </thead>
@@ -336,8 +357,13 @@ export default function VehicleManagement() {
                   </td>
                 </tr>
               ) : vehicles.length > 0 ? (
-                vehicles.map((vehicle) => (
-                  <tr key={vehicle.id} className="border-b hover:bg-gray-50">
+                vehicles.map((vehicle, index) => (
+                  <tr
+                    key={vehicle.id}
+                    className={`border-b hover:bg-gray-50 ${
+                      index % 2 === 1 ? "bg-gray-100" : ""
+                    }`}
+                  >
                     <td className="px-6 py-4 font-medium">{vehicle.model}</td>
                     <td className="px-6 py-4">{vehicle.plate_number}</td>
                     <td className="px-6 py-4 capitalize">{vehicle.type}</td>
@@ -363,7 +389,7 @@ export default function VehicleManagement() {
               ) : (
                 <tr>
                   <td colSpan="5" className="text-center py-10 text-gray-500">
-                    No vehicles found.
+                    هیچ وسیله نقلیه یافت نشد
                   </td>
                 </tr>
               )}

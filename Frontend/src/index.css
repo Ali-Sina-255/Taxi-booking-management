@@ -208,7 +208,7 @@ body::-webkit-scrollbar-track {
   }
 }
 .input-field {
-  @apply border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500;
+  @apply border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-1 ring-black/50;
 }
 
 .input-field {
