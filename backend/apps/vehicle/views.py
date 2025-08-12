@@ -1,5 +1,7 @@
 # apps/vehicle/views.py
-
+from datetime import date, timedelta
+from django.db.models.functions import TruncDate
+from django.db.models import Count 
 from rest_framework import generics, permissions, viewsets
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from .models import Location, Route, Trip, Vehicle, DriverApplication
@@ -8,11 +10,14 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from .serializers import (
     AdminDriverApplicationSerializer, AdminTripListSerializer, AdminTripUpdateSerializer,
     DriverApplicationSerializer, DriverTripSerializer, LocationSerializer, RouteSerializer,
-    TripRequestSerializer, TripUpdateSerializer, VehicleSerializer, AvailableTripRequestSerializer
+    TripRequestSerializer, TripUpdateSerializer, VehicleSerializer, AvailableTripRequestSerializer,DashboardRecentTripSerializer
 )
+from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.response import Response # <-- Add Response
 from rest_framework.views import APIView
+User = get_user_model()
+
 class VehicleListCreateView(generics.ListCreateAPIView):
     # This view is for Admins to see ALL vehicles.
     # We will rename it to be more specific.
@@ -188,3 +193,47 @@ class AcceptTripView(APIView):
         trip.save()
 
         return Response({'detail': 'Trip accepted successfully.'}, status=status.HTTP_200_OK)
+    
+
+class AdminDashboardStatsView(APIView):
+   
+    permission_classes = [IsAdmin]
+
+    def get(self, request, format=None):
+        # KPI Card Stats
+        total_users = User.objects.count()
+        total_drivers = User.objects.filter(role=User.Role.DRIVER).count()
+        total_passengers = User.objects.filter(role=User.Role.PASSENGER).count()
+        total_trips = Trip.objects.count()
+        pending_applications = DriverApplication.objects.filter(status='pending').count()
+
+        # Recent Trips List (Last 5)
+        recent_trips_qs = Trip.objects.select_related(
+            'passenger', 'route__pickup', 'route__drop'
+        ).order_by('-request_time')[:5]
+        recent_trips_serializer = DashboardRecentTripSerializer(recent_trips_qs, many=True)
+
+        # Bar Chart Data (Trips in the last 7 days)
+        seven_days_ago = date.today() - timedelta(days=7)
+        trips_per_day = (
+            Trip.objects.filter(request_time__date__gte=seven_days_ago)
+            .annotate(day=TruncDate('request_time')) # This line will now work
+            .values('day')
+            .annotate(count=Count('id')) 
+            .order_by('day')
+        )
+        chart_data = [{'date': item['day'].strftime('%b %d'), 'trips': item['count']} for item in trips_per_day]
+
+        # Consolidate all data into a single response object
+        data = {
+            'kpi': {
+                'total_users': total_users,
+                'total_drivers': total_drivers,
+                'total_passengers': total_passengers,
+                'total_trips': total_trips,
+                'pending_applications': pending_applications,
+            },
+            'recent_trips': recent_trips_serializer.data,
+            'chart_data': chart_data
+        }
+        return Response(data)

@@ -98,36 +98,6 @@ class RouteSerializer(serializers.ModelSerializer):
         return instance
 
 
-# class TripRequestSerializer(serializers.ModelSerializer):
-#     route_id = serializers.PrimaryKeyRelatedField(
-#         queryset=Route.objects.all(), source="route", write_only=True
-#     )
-#     route = RouteSerializer(read_only=True)
-#     class Meta:
-#         model = Trip
-#         fields = [
-#             "id",
-#             "route_id",  # For writing
-#             "route",     # For reading
-#             "distance_km",
-#             "fare",
-#             "status",
-#             "request_time",
-#             "start_time",
-#             "end_time",
-#         ]
-#         read_only_fields = ["fare", "status", "request_time", "start_time", "end_time"]
-
-#     # def validate(self, data):
-#     #     user = self.context["request"].user
-#     #     if user.role != "passenger":
-#     #         raise serializers.ValidationError("Only passengers can create trips.")
-#     #     return data
-
-#     def create(self, validated_data):
-#         validated_data["passenger"] = self.context["request"].user
-#         return super().create(validated_data)
-
 class TripRequestSerializer(serializers.ModelSerializer):
     route_id = serializers.PrimaryKeyRelatedField(
         queryset=Route.objects.all(), source="route", write_only=True
@@ -136,7 +106,6 @@ class TripRequestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Trip
-        # --- ADD THE NEW FIELDS HERE ---
         fields = [
             "id",
             "route_id",
@@ -156,19 +125,13 @@ class TripRequestSerializer(serializers.ModelSerializer):
             "passenger_count", "notes_for_driver", "scheduled_for"
         ]
 
-    # The create method already handles saving the passenger correctly. No changes needed here.
     def create(self, validated_data):
-        # The 'route' object is already in validated_data because of the `source='route'`
         route = validated_data.get('route')
-
-        # Add the fare from the route directly to the data before creating the object
         if route:
             validated_data['fare'] = route.price_af
         
-        # Add the passenger from the request context
         validated_data['passenger'] = self.context['request'].user
         
-        # Now, create the Trip object with all the correct data
         return super().create(validated_data)
 
 class DriverTripSerializer(serializers.ModelSerializer):
@@ -190,19 +153,13 @@ class DriverTripSerializer(serializers.ModelSerializer):
             "request_time",
         ]
 class TripUpdateSerializer(serializers.ModelSerializer):
-    """
-    A simple serializer specifically for updating a trip's status.
-    It does not contain the passenger-only validation logic.
-    """
+   
     class Meta:
         model = Trip
         fields = ['status']
 
 class AdminTripUpdateSerializer(serializers.ModelSerializer):
-    """
-    A serializer for Admins to update a trip.
-    Allows assigning a driver and changing the status.
-    """
+  
     # The driver field is a write-only field expecting the User's integer PK.
     driver = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.filter(role=User.Role.DRIVER),
@@ -283,3 +240,14 @@ class AvailableTripRequestSerializer(serializers.ModelSerializer):
             'id', 'pk', 'passenger_name', 'route', 'fare', 'passenger_count',
             'notes_for_driver', 'scheduled_for', 'request_time'
         ]
+
+class DashboardRecentTripSerializer(serializers.ModelSerializer):
+    passenger_name = serializers.CharField(source='passenger.get_full_name', read_only=True)
+    route_display = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Trip
+        fields = ['id', 'passenger_name', 'route_display', 'status', 'request_time']
+
+    def get_route_display(self, obj):
+        return f"{obj.route.pickup.name} ➜ {obj.route.drop.name}"

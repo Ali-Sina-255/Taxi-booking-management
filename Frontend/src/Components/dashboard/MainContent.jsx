@@ -13,6 +13,7 @@ import AdminTripManagement from "./pages/AdminTripManagement.jsx";
 import DriverApplications from "./pages/DriverApplications.jsx";
 import UserManagement from "./pages/UserManagement.jsx";
 import DriverManagement from "./pages/DriverManagement.jsx";
+import AdminDashboard from "./pages/AdminDashboard.jsx"; // Ensure this is imported
 
 const Placeholder = ({ title }) => (
   <div className="p-8">
@@ -27,8 +28,9 @@ const MainContent = ({ activeComponent }) => {
   const isDriver = profile?.role === "driver";
   const isPassenger = profile?.role === "passenger";
 
+  // --- FIX: The default component for an admin is the new Reporting Dashboard ---
   const getDefaultComponent = () => {
-    if (isAdmin) return <AdminTripManagement />;
+    if (isAdmin) return <AdminDashboard />;
     if (isDriver) return <DriverTripList />;
     if (isPassenger) return <RequestTrip />;
     return <Placeholder title="Dashboard" />;
@@ -37,8 +39,15 @@ const MainContent = ({ activeComponent }) => {
   const renderContent = () => {
     switch (activeComponent) {
       // Admin Pages
-      case "dashboard":
+      // --- FIX: The `case` now matches the new sidebar `value` ---
+      case "reporting":
+        return isAdmin ? <AdminDashboard /> : null;
+
+      // This is the old "dashboard" which we now call Trip Management
+      case "trips":
         return isAdmin ? <AdminTripManagement /> : null;
+
+      // All other cases remain the same but let's be explicit
       case "users":
         return isAdmin ? <UserManagement /> : null;
       case "drivers":
@@ -49,22 +58,26 @@ const MainContent = ({ activeComponent }) => {
         return isAdmin ? <RouteManagement /> : null;
       case "applications":
         return isAdmin ? <DriverApplications /> : null;
-      case "trips":
-        return isAdmin ? <AdminTripManagement /> : null;
+
       // Shared Page
       case "vehicles":
         return isAdmin || isDriver ? <VehicleManagement /> : null;
+
       // Driver Pages
       case "trip-requests":
         return isDriver ? <DriverTripList /> : null;
+
       // Passenger Pages
       case "request-trip":
         return isPassenger ? <RequestTrip /> : null;
       case "my-trips":
         return isPassenger ? <MyTrips /> : null;
+
       // Common Page
       case "profile":
         return <Profile />;
+
+      // Default case now correctly handles the logic
       default:
         return getDefaultComponent();
     }

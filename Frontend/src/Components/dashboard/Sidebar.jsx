@@ -18,7 +18,7 @@ import { signOutSuccess } from "../../state/userSlice/userSlice";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
-import { MdDashboardCustomize } from "react-icons/md";
+import { MdDashboard } from "react-icons/md"; // A good icon for the reporting dashboard
 
 const Sidebar = ({ setActiveComponent, activeComponent }) => {
   const dispatch = useDispatch();
@@ -43,12 +43,19 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
     });
   };
 
+  // This is the complete and corrected menu structure
   const allMenuItems = [
     // --- ADMIN SECTION ---
     {
-      name: "Dashboard",
-      value: "dashboard",
-      icon: <MdDashboardCustomize />,
+      name: "Reporting Dashboard",
+      value: "reporting", // Unique value for the new dashboard
+      icon: <MdDashboard />,
+      roles: ["admin"],
+    },
+    {
+      name: "Trip Management",
+      value: "trips", // This now correctly links to the trip list
+      icon: <FaTaxi />,
       roles: ["admin"],
     },
     {
@@ -61,12 +68,6 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
       name: "Driver Management",
       value: "drivers",
       icon: <FaCarAlt />,
-      roles: ["admin"],
-    },
-    {
-      name: "Trip Management",
-      value: "trips",
-      icon: <FaTaxi />,
       roles: ["admin"],
     },
     {
@@ -88,6 +89,7 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
       roles: ["admin"],
     },
     { name: "Routes", value: "routes", icon: <FaRoute />, roles: ["admin"] },
+    
     // --- DRIVER SECTION ---
     {
       name: "Available Trips",
@@ -101,6 +103,7 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
       icon: <FaCar />,
       roles: ["driver"],
     },
+    
     // --- PASSENGER SECTION ---
     {
       name: "Request a Trip",
@@ -114,6 +117,7 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
       icon: <FaListAlt />,
       roles: ["passenger"],
     },
+    
     // --- COMMON SECTION ---
     {
       name: "Profile",
@@ -135,7 +139,6 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
 
   return (
     <>
-      {/* --- RESTORED STYLING AND STRUCTURE --- */}
       <div
         className={` h-full transition-all duration-300 ease-in-out bg-secondary shadow-lg ${
           isOpen ? "w-[70px] md:w-[80px] lg:w-64" : "w-0"
@@ -184,7 +187,7 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
         </ul>
       </div>
 
-      {/* --- Mobile Toggle Button --- */}
+      {/* Mobile Toggle Buttons */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}

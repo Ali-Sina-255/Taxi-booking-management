@@ -20,6 +20,7 @@ from .views import (
     AvailableTripRequestListView,
     AcceptTripView,   
     DriverVehicleManageView,
+    AdminDashboardStatsView
 )
 # --- END OF FIX ---
 
@@ -43,4 +44,5 @@ urlpatterns = [
     path("trips/<int:pk>/accept/", AcceptTripView.as_view(), name="driver-accept-trip"),
     path("driver/vehicles/", DriverVehicleManageView.as_view(), name="driver-vehicle-list-create"),
     path("admin/vehicles/", VehicleListCreateView.as_view(), name="admin-vehicle-list-create"),
+    path("admin/dashboard-stats/", AdminDashboardStatsView.as_view(), name="admin-dashboard-stats"),
 ]
