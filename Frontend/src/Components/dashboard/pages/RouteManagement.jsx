@@ -349,7 +349,7 @@ export default function RouteManagement() {
                   </td>
                 </tr>
               ) : routes.length > 0 ? (
-                routes.map((route) => (
+                routes.map((route,index) => (
                   <tr
                     key={route.pk}
                     className={`border-b hover:bg-gray-50 ${

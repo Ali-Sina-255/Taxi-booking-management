@@ -80,66 +80,6 @@ class Route(TimeStampedModel):
         return f"{self.pickup} ➜ {self.drop} - {self.price_af} AF"
 
 
-# ----------------------------
-# TRIP MODEL
-# ----------------------------
-
-
-# class Trip(TimeStampedModel):
-#     passenger = models.ForeignKey(
-#         User, on_delete=models.CASCADE, related_name="passenger_trips"
-#     )
-#     driver = models.ForeignKey(
-#         User,
-#         on_delete=models.SET_NULL,
-#         null=True,
-#         blank=True,
-#         related_name="driver_trips",
-#     )
-#     vehicle = models.ForeignKey(
-#         Vehicle, on_delete=models.SET_NULL, null=True, blank=True
-#     )
-#     route = models.ForeignKey(Route, on_delete=models.CASCADE, related_name="trips")
-
-#     distance_km = models.FloatField(default=0)  # You can calculate this dynamically
-#     fare = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-
-#     STATUS_CHOICES = [
-#         ("requested", "Requested"),
-#         ("in_progress", "In Progress"),
-#         ("completed", "Completed"),
-#         ("cancelled", "Cancelled"),
-#     ]
-#     status = models.CharField(
-#         max_length=50, choices=STATUS_CHOICES, default="requested"
-#     )
-#     request_time = models.DateTimeField(auto_now_add=True)
-#     start_time = models.DateTimeField(null=True, blank=True)
-#     end_time = models.DateTimeField(null=True, blank=True)
-
-#     def __str__(self):
-#         return f"Trip {self.id} by {self.passenger.get_full_name}"
-
-#     class Trip(TimeStampedModel):
-#     # ... (all your fields)
-
-#       def clean(self):
-#         if self.passenger.role != User.Role.PASSENGER:
-#             raise ValidationError("Assigned passenger must have role 'passenger'.")
-#         if self.driver and self.driver.role != User.Role.DRIVER:
-#             raise ValidationError("Assigned driver must have role 'driver'.")
-
-#     # --- THIS IS THE UPDATED SAVE METHOD ---
-#     def save(self, *args, **kwargs):
-#         # Auto-set fare if not manually set. This is good, we keep it.
-#         if not self.fare and self.route:
-#             self.fare = self.route.price_af
-
-#         # We have REMOVED the automatic driver and vehicle assignment logic.
-#         # The trip will now be saved without a driver unless one is explicitly provided.
-
-#         self.full_clean()
-#         super().save(*args, **kwargs)
 class Trip(TimeStampedModel):
     passenger = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="passenger_trips"
@@ -191,11 +131,10 @@ class DriverApplication(TimeStampedModel):
         User,
         on_delete=models.CASCADE,
         related_name="driver_application",
-        limit_choices_to={'role': User.Role.PASSENGER} # Only passengers can apply
+        limit_choices_to={'role': User.Role.PASSENGER}
     )
     license_number = models.CharField(max_length=100)
     years_of_experience = models.PositiveIntegerField()
-    # You can add more fields here like a short bio, etc.
     
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     reviewed_by = models.ForeignKey(

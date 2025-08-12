@@ -360,7 +360,7 @@ export default function VehicleManagement() {
                   </td>
                 </tr>
               ) : vehicles.length > 0 ? (
-                vehicles.map((vehicle) => (
+                vehicles.map((vehicle,index) => (
                   <tr
                     key={vehicle.id}
                     className={`border-b hover:bg-gray-50 ${
