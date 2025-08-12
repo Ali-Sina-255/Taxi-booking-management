@@ -4,31 +4,48 @@ from rest_framework import generics, permissions, viewsets
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from .models import Location, Route, Trip, Vehicle, DriverApplication
 from .permissions import IsAdmin, IsDriver, IsOwnerOrReadOnly, IsPassenger
+from rest_framework.permissions import IsAuthenticated, AllowAny 
 from .serializers import (
     AdminDriverApplicationSerializer, AdminTripListSerializer, AdminTripUpdateSerializer,
     DriverApplicationSerializer, DriverTripSerializer, LocationSerializer, RouteSerializer,
-    TripRequestSerializer, TripUpdateSerializer, VehicleSerializer
+    TripRequestSerializer, TripUpdateSerializer, VehicleSerializer, AvailableTripRequestSerializer
 )
-
+from rest_framework import status
+from rest_framework.response import Response # <-- Add Response
+from rest_framework.views import APIView
 class VehicleListCreateView(generics.ListCreateAPIView):
+    # This view is for Admins to see ALL vehicles.
+    # We will rename it to be more specific.
     queryset = Vehicle.objects.all()
     serializer_class = VehicleSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdmin] # <-- Change to IsAdmin
 
     def perform_create(self, serializer):
-        user = self.request.user
-        if user.role == "driver":
-            serializer.save(driver=user)
-        elif user.role == "admin":
-            serializer.save()
-        else:
-            raise PermissionDenied("You do not have permission to create a vehicle.")
+        # This logic is for an admin creating a vehicle for a driver
+        serializer.save()
+class DriverVehicleManageView(generics.ListCreateAPIView):
+    """
+    Allows a logged-in driver to list and create THEIR OWN vehicles.
+    """
+    serializer_class = VehicleSerializer
+    permission_classes = [IsDriver] # <-- Only drivers can access this
 
+    def get_queryset(self):
+        """
+        This view should only return vehicles owned by the currently logged-in driver.
+        """
+        return Vehicle.objects.filter(driver=self.request.user)
+
+    def perform_create(self, serializer):
+        """
+        When a driver creates a vehicle, automatically assign them as the driver.
+        """
+        serializer.save(driver=self.request.user)
 
 class VehicleDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Vehicle.objects.all()
     serializer_class = VehicleSerializer
-    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [IsAuthenticated, (IsAdmin | IsOwnerOrReadOnly)] 
     lookup_field = "id"
 
 
@@ -48,12 +65,22 @@ class LocationDetailView(generics.RetrieveUpdateDestroyAPIView):
 class RouteViewSet(viewsets.ModelViewSet):
     queryset = Route.objects.all()
     serializer_class = RouteSerializer
-    permission_classes = [permissions.IsAuthenticated]
+
+    def get_permissions(self):
+       
+        # For 'GET' requests (list/retrieve), allow public access.
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [AllowAny]
+        # For 'POST', 'PUT', 'DELETE' (create/edit), require an Admin.
+        else:
+            permission_classes = [IsAdmin]
+            
+        return [permission() for permission in permission_classes]
 
 
 class TripRequestCreateView(generics.ListCreateAPIView):
     serializer_class = TripRequestSerializer
-    permission_classes = [permissions.IsAuthenticated, (IsPassenger | IsDriver)]
+    permission_classes = [IsPassenger]
 
     def get_queryset(self):
         return Trip.objects.filter(passenger=self.request.user)
@@ -111,3 +138,53 @@ class AdminApplicationDetailView(generics.RetrieveUpdateAPIView):
     serializer_class = AdminDriverApplicationSerializer
     permission_classes = [permissions.IsAuthenticated, IsAdmin]
     lookup_field = 'id' # Use the application's UUID for the lookup
+
+class AvailableTripRequestListView(generics.ListAPIView):
+    """
+    Provides a list of unassigned trips on routes the logged-in driver services.
+    """
+    serializer_class = AvailableTripRequestSerializer # <-- ERROR HAPPENS HERE
+    permission_classes = [IsDriver]
+
+    def get_queryset(self):
+        driver = self.request.user
+        # Get all routes this driver is assigned to
+        driver_routes = driver.available_routes.all()
+        # Return trips that are 'requested', have no driver, and are on the driver's routes
+        return Trip.objects.filter(
+            status='requested',
+            driver__isnull=True,
+            route__in=driver_routes
+        ).select_related('route__pickup', 'route__drop', 'passenger').order_by('request_time')
+
+
+# --- NEW VIEW 2: To securely handle the 'accept' action ---
+class AcceptTripView(APIView):
+    """
+    Allows a driver to accept and assign themselves to a trip.
+    """
+    permission_classes = [IsDriver]
+
+    def post(self, request, pk, format=None):
+        driver = request.user
+        try:
+            trip = Trip.objects.get(pk=pk)
+        except Trip.DoesNotExist:
+            return Response({'detail': 'Trip not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Security Checks
+        if trip.driver is not None:
+            return Response({'detail': 'This trip has already been assigned.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if trip.status != 'requested':
+            return Response({'detail': 'This trip is not available for acceptance.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if driver not in trip.route.drivers.all():
+             return Response({'detail': 'You are not authorized to accept trips for this route.'}, status=status.HTTP_403_FORBIDDEN)
+
+        # Assign the trip
+        trip.driver = driver
+        trip.status = 'in_progress'
+        trip.save()
+
+        return Response({'detail': 'Trip accepted successfully.'}, status=status.HTTP_200_OK)

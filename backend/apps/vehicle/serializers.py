@@ -98,36 +98,78 @@ class RouteSerializer(serializers.ModelSerializer):
         return instance
 
 
+# class TripRequestSerializer(serializers.ModelSerializer):
+#     route_id = serializers.PrimaryKeyRelatedField(
+#         queryset=Route.objects.all(), source="route", write_only=True
+#     )
+#     route = RouteSerializer(read_only=True)
+#     class Meta:
+#         model = Trip
+#         fields = [
+#             "id",
+#             "route_id",  # For writing
+#             "route",     # For reading
+#             "distance_km",
+#             "fare",
+#             "status",
+#             "request_time",
+#             "start_time",
+#             "end_time",
+#         ]
+#         read_only_fields = ["fare", "status", "request_time", "start_time", "end_time"]
+
+#     # def validate(self, data):
+#     #     user = self.context["request"].user
+#     #     if user.role != "passenger":
+#     #         raise serializers.ValidationError("Only passengers can create trips.")
+#     #     return data
+
+#     def create(self, validated_data):
+#         validated_data["passenger"] = self.context["request"].user
+#         return super().create(validated_data)
+
 class TripRequestSerializer(serializers.ModelSerializer):
     route_id = serializers.PrimaryKeyRelatedField(
         queryset=Route.objects.all(), source="route", write_only=True
     )
     route = RouteSerializer(read_only=True)
+
     class Meta:
         model = Trip
+        # --- ADD THE NEW FIELDS HERE ---
         fields = [
             "id",
-            "route_id",  # For writing
-            "route",     # For reading
+            "route_id",
+            "route",
             "distance_km",
             "fare",
             "status",
             "request_time",
             "start_time",
             "end_time",
+            "passenger_count",    # New
+            "notes_for_driver",   # New
+            "scheduled_for",      # New
         ]
-        read_only_fields = ["fare", "status", "request_time", "start_time", "end_time"]
+        read_only_fields = [
+            "fare", "status", "request_time", "start_time", "end_time", "route",
+            "passenger_count", "notes_for_driver", "scheduled_for"
+        ]
 
-    def validate(self, data):
-        user = self.context["request"].user
-        if user.role != "passenger":
-            raise serializers.ValidationError("Only passengers can create trips.")
-        return data
-
+    # The create method already handles saving the passenger correctly. No changes needed here.
     def create(self, validated_data):
-        validated_data["passenger"] = self.context["request"].user
-        return super().create(validated_data)
+        # The 'route' object is already in validated_data because of the `source='route'`
+        route = validated_data.get('route')
 
+        # Add the fare from the route directly to the data before creating the object
+        if route:
+            validated_data['fare'] = route.price_af
+        
+        # Add the passenger from the request context
+        validated_data['passenger'] = self.context['request'].user
+        
+        # Now, create the Trip object with all the correct data
+        return super().create(validated_data)
 
 class DriverTripSerializer(serializers.ModelSerializer):
     passenger_name = serializers.CharField(
@@ -179,24 +221,25 @@ class AdminTripListSerializer(serializers.ModelSerializer):
     A read-only serializer for the admin trip management page.
     It includes nested details for the passenger, driver, and route.
     """
-    # Nested serializer for the passenger to get their full name
     passenger = serializers.SerializerMethodField()
-    # Nested serializer for the route to get pickup and dropoff names
     route = RouteSerializer(read_only=True)
-    # Get the assigned driver's name if they exist
     driver_name = serializers.CharField(source='driver.get_full_name', read_only=True, allow_null=True)
 
     class Meta:
         model = Trip
+        # --- ADD THE NEW FIELDS TO THIS LIST ---
         fields = [
             'id',
             'passenger',
-            'driver', # The driver's integer PK
+            'driver', 
             'driver_name',
             'route',
             'fare',
             'status',
-            'request_time'
+            'request_time',
+            'passenger_count',    # New
+            'notes_for_driver',   # New
+            'scheduled_for',      # New
         ]
 
     def get_passenger(self, obj):
@@ -226,4 +269,17 @@ class AdminDriverApplicationSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'applicant_name', 'license_number', 'years_of_experience',
             'status', 'reviewed_by'
+        ]
+class AvailableTripRequestSerializer(serializers.ModelSerializer):
+    """
+    Shows detailed trip info for the "Trip Request Board" for drivers.
+    """
+    route = RouteSerializer(read_only=True)
+    passenger_name = serializers.CharField(source='passenger.get_full_name', read_only=True)
+
+    class Meta:
+        model = Trip
+        fields = [
+            'id', 'pk', 'passenger_name', 'route', 'fare', 'passenger_count',
+            'notes_for_driver', 'scheduled_for', 'request_time'
         ]

@@ -17,6 +17,9 @@ from .views import (
     TripRequestCreateView,
     VehicleDetailView,
     VehicleListCreateView,
+    AvailableTripRequestListView,
+    AcceptTripView,   
+    DriverVehicleManageView,
 )
 # --- END OF FIX ---
 
@@ -36,4 +39,8 @@ urlpatterns = [
     path("driver/apply/", DriverApplicationCreateView.as_view(), name="driver-apply"),
     path("admin/applications/", AdminApplicationListView.as_view(), name="admin-applications-list"),
     path("admin/applications/<uuid:id>/", AdminApplicationDetailView.as_view(), name="admin-applications-detail"),
+    path("driver/available-trips/", AvailableTripRequestListView.as_view(), name="driver-available-trips"),
+    path("trips/<int:pk>/accept/", AcceptTripView.as_view(), name="driver-accept-trip"),
+    path("driver/vehicles/", DriverVehicleManageView.as_view(), name="driver-vehicle-list-create"),
+    path("admin/vehicles/", VehicleListCreateView.as_view(), name="admin-vehicle-list-create"),
 ]

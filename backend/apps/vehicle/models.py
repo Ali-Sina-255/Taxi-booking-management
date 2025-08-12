@@ -85,6 +85,61 @@ class Route(TimeStampedModel):
 # ----------------------------
 
 
+# class Trip(TimeStampedModel):
+#     passenger = models.ForeignKey(
+#         User, on_delete=models.CASCADE, related_name="passenger_trips"
+#     )
+#     driver = models.ForeignKey(
+#         User,
+#         on_delete=models.SET_NULL,
+#         null=True,
+#         blank=True,
+#         related_name="driver_trips",
+#     )
+#     vehicle = models.ForeignKey(
+#         Vehicle, on_delete=models.SET_NULL, null=True, blank=True
+#     )
+#     route = models.ForeignKey(Route, on_delete=models.CASCADE, related_name="trips")
+
+#     distance_km = models.FloatField(default=0)  # You can calculate this dynamically
+#     fare = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+
+#     STATUS_CHOICES = [
+#         ("requested", "Requested"),
+#         ("in_progress", "In Progress"),
+#         ("completed", "Completed"),
+#         ("cancelled", "Cancelled"),
+#     ]
+#     status = models.CharField(
+#         max_length=50, choices=STATUS_CHOICES, default="requested"
+#     )
+#     request_time = models.DateTimeField(auto_now_add=True)
+#     start_time = models.DateTimeField(null=True, blank=True)
+#     end_time = models.DateTimeField(null=True, blank=True)
+
+#     def __str__(self):
+#         return f"Trip {self.id} by {self.passenger.get_full_name}"
+
+#     class Trip(TimeStampedModel):
+#     # ... (all your fields)
+
+#       def clean(self):
+#         if self.passenger.role != User.Role.PASSENGER:
+#             raise ValidationError("Assigned passenger must have role 'passenger'.")
+#         if self.driver and self.driver.role != User.Role.DRIVER:
+#             raise ValidationError("Assigned driver must have role 'driver'.")
+
+#     # --- THIS IS THE UPDATED SAVE METHOD ---
+#     def save(self, *args, **kwargs):
+#         # Auto-set fare if not manually set. This is good, we keep it.
+#         if not self.fare and self.route:
+#             self.fare = self.route.price_af
+
+#         # We have REMOVED the automatic driver and vehicle assignment logic.
+#         # The trip will now be saved without a driver unless one is explicitly provided.
+
+#         self.full_clean()
+#         super().save(*args, **kwargs)
 class Trip(TimeStampedModel):
     passenger = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="passenger_trips"
@@ -101,8 +156,14 @@ class Trip(TimeStampedModel):
     )
     route = models.ForeignKey(Route, on_delete=models.CASCADE, related_name="trips")
 
-    distance_km = models.FloatField(default=0)  # You can calculate this dynamically
+    distance_km = models.FloatField(default=0)
     fare = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+
+    # --- NEW FIELDS TO STORE MORE DETAILS ---
+    passenger_count = models.PositiveSmallIntegerField(default=1)
+    notes_for_driver = models.TextField(blank=True)
+    scheduled_for = models.DateTimeField(null=True, blank=True, help_text="If not null, the trip is scheduled for a future time.")
+    # --- END OF NEW FIELDS ---
 
     STATUS_CHOICES = [
         ("requested", "Requested"),
@@ -119,27 +180,6 @@ class Trip(TimeStampedModel):
 
     def __str__(self):
         return f"Trip {self.id} by {self.passenger.get_full_name}"
-
-    class Trip(TimeStampedModel):
-    # ... (all your fields)
-
-      def clean(self):
-        if self.passenger.role != User.Role.PASSENGER:
-            raise ValidationError("Assigned passenger must have role 'passenger'.")
-        if self.driver and self.driver.role != User.Role.DRIVER:
-            raise ValidationError("Assigned driver must have role 'driver'.")
-
-    # --- THIS IS THE UPDATED SAVE METHOD ---
-    def save(self, *args, **kwargs):
-        # Auto-set fare if not manually set. This is good, we keep it.
-        if not self.fare and self.route:
-            self.fare = self.route.price_af
-
-        # We have REMOVED the automatic driver and vehicle assignment logic.
-        # The trip will now be saved without a driver unless one is explicitly provided.
-
-        self.full_clean()
-        super().save(*args, **kwargs)
 
 class DriverApplication(TimeStampedModel):
     class Status(models.TextChoices):

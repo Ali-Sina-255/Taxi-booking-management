@@ -1,10 +1,10 @@
 // src/Components/dashboard/pages/AdminTripManagement.jsx
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Swal from "sweetalert2";
 import { FaTaxi, FaTimes } from "react-icons/fa";
 import { useSelector } from "react-redux";
-import { Loader2 } from "lucide-react";
+import { Loader2, Users, Calendar, MessageSquare } from "lucide-react";
 import { store } from "../../../state/store";
 import axios from "axios";
 import Select from "react-select";
@@ -24,10 +24,10 @@ const createApiClient = () => {
 
 const StatusBadge = ({ status }) => {
   const statusStyles = {
-    requested: "bg-blue-100 text-blue-700",
+    requested: "bg-blue-100 text-blue-800",
     in_progress: "bg-yellow-100 text-yellow-800",
-    completed: "bg-green-100 text-green-700",
-    cancelled: "bg-red-100 text-red-700",
+    completed: "bg-green-100 text-green-800",
+    cancelled: "bg-red-100 text-red-800",
   };
   const style =
     statusStyles[status?.toLowerCase()] || "bg-gray-100 text-gray-700";
@@ -36,15 +36,15 @@ const StatusBadge = ({ status }) => {
     : "Unknown";
   return (
     <span
-      className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ring-gray-500/10 ${style}`}
+      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${style}`}
     >
       {statusText}
     </span>
   );
 };
 
-// --- NEW COMPONENT: The Assignment Modal ---
 const AssignmentModal = ({ trip, drivers, onClose, onAssign }) => {
+  // This component remains unchanged. It works as is.
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -59,7 +59,6 @@ const AssignmentModal = ({ trip, drivers, onClose, onAssign }) => {
     await onAssign(trip.id, selectedDriver.value);
     setIsSubmitting(false);
   };
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -87,16 +86,42 @@ const AssignmentModal = ({ trip, drivers, onClose, onAssign }) => {
           </button>
         </div>
         <div className="p-6 space-y-4">
-          <div>
-            <p className="font-semibold">Passenger:</p>
-            <p className="text-gray-700">{trip.passenger}</p>
+          <div className="flex justify-between items-center">
+            <p className="font-semibold text-gray-600">Passenger:</p>
+            <p>{trip.passenger}</p>
           </div>
-          <div>
-            <p className="font-semibold">Route:</p>
-            <p className="text-gray-700">
+          <div className="flex justify-between items-center">
+            <p className="font-semibold text-gray-600">Route:</p>
+            <p className="font-medium">
               {trip.route.pickup.name} ➜ {trip.route.drop.name}
             </p>
           </div>
+          <div className="flex justify-between items-center">
+            <p className="font-semibold text-gray-600 flex items-center gap-2">
+              <Users size={16} /> Passengers:
+            </p>
+            <p>{trip.passenger_count}</p>
+          </div>
+          {trip.scheduled_for && (
+            <div className="flex justify-between items-center text-blue-700">
+              <p className="font-semibold flex items-center gap-2">
+                <Calendar size={16} /> Scheduled For:
+              </p>
+              <p className="font-bold">
+                {new Date(trip.scheduled_for).toLocaleString()}
+              </p>
+            </div>
+          )}
+          {trip.notes_for_driver && (
+            <div className="space-y-1">
+              <p className="font-semibold text-gray-600 flex items-center gap-2">
+                <MessageSquare size={16} /> Passenger Note:
+              </p>
+              <p className="text-gray-700 bg-gray-100 p-3 rounded-md">
+                {trip.notes_for_driver}
+              </p>
+            </div>
+          )}
           <div>
             <label className="block mb-2 font-medium">Select Driver:</label>
             <Select
@@ -129,16 +154,47 @@ const AssignmentModal = ({ trip, drivers, onClose, onAssign }) => {
   );
 };
 
+// --- NEW: Filter Buttons Component ---
+const FilterControls = ({ activeFilter, setActiveFilter }) => {
+  const filterOptions = [
+    { label: "All", value: "all" },
+    { label: "Requested", value: "requested" },
+    { label: "In Progress", value: "in_progress" },
+    { label: "Completed", value: "completed" },
+    { label: "Cancelled", value: "cancelled" },
+  ];
+
+  return (
+    <div className="mb-6 flex flex-wrap gap-2">
+      {filterOptions.map((option) => (
+        <button
+          key={option.value}
+          onClick={() => setActiveFilter(option.value)}
+          className={`px-4 py-2 text-sm font-semibold rounded-full transition-colors duration-200 ${
+            activeFilter === option.value
+              ? "bg-blue-600 text-white shadow"
+              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+          }`}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  );
+};
+
 export default function AdminTripManagement() {
   const token = useSelector((state) => state.user.accessToken);
-  const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [driverOptions, setDriverOptions] = useState([]);
-
-  // --- NEW STATE: To manage which trip is being assigned in the modal ---
   const [assigningTrip, setAssigningTrip] = useState(null);
 
+  // --- NEW: State for filtering ---
+  const [allTrips, setAllTrips] = useState([]); // Master list of all trips
+  const [activeFilter, setActiveFilter] = useState("all"); // Current active filter
+
   const fetchData = useCallback(async () => {
+    // ... (fetchData logic remains the same, but it now sets allTrips)
     if (!token) return;
     setLoading(true);
     const api = createApiClient();
@@ -147,9 +203,7 @@ export default function AdminTripManagement() {
         api.get("/api/v1/vehicle/admin/trips/"),
         api.get("/api/v1/profiles/all/"),
       ]);
-
-      setTrips(tripsRes.data.results || tripsRes.data || []);
-
+      setAllTrips(tripsRes.data.results || tripsRes.data || []); // <-- Populates the master list
       const allProfiles = profilesRes.data?.profiles?.results || [];
       const drivers = allProfiles.filter((p) => p.role === "driver");
       setDriverOptions(
@@ -171,7 +225,18 @@ export default function AdminTripManagement() {
     fetchData();
   }, [fetchData]);
 
+  // --- NEW: Memoized filtering logic ---
+  // This creates the list of trips to display based on the active filter.
+  // It runs automatically whenever `allTrips` or `activeFilter` changes.
+  const filteredTrips = useMemo(() => {
+    if (activeFilter === "all") {
+      return allTrips;
+    }
+    return allTrips.filter((trip) => trip.status === activeFilter);
+  }, [allTrips, activeFilter]);
+
   const handleAssignDriver = async (tripId, driverId) => {
+    // This function remains unchanged.
     const api = createApiClient();
     try {
       await api.patch(`/api/v1/vehicle/trips/${tripId}/`, {
@@ -179,8 +244,8 @@ export default function AdminTripManagement() {
         status: "in_progress",
       });
       Swal.fire("Success!", "Trip has been assigned to the driver.", "success");
-      setAssigningTrip(null); // Close the modal on success
-      fetchData(); // Refresh the list
+      setAssigningTrip(null);
+      fetchData();
     } catch (error) {
       console.error("Error assigning driver:", error.response?.data || error);
       Swal.fire("Error", "Failed to assign trip.", "error");
@@ -202,9 +267,16 @@ export default function AdminTripManagement() {
 
       <div className="p-3 md:p-6 w-full">
         <div className="bg-white p-6 shadow-md rounded-lg max-w-7xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-4 flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-gray-800 mb-4 border-b pb-4 flex items-center gap-3">
             <FaTaxi /> Trip Management
           </h1>
+
+          {/* --- NEW: Add the filter controls UI --- */}
+          <FilterControls
+            activeFilter={activeFilter}
+            setActiveFilter={setActiveFilter}
+          />
+
           <div className="overflow-x-auto">
             {loading ? (
               <div className="flex justify-center items-center h-64">
@@ -214,28 +286,69 @@ export default function AdminTripManagement() {
               <table className="w-full text-sm text-left text-gray-500">
                 <thead className="text-xs text-gray-700 uppercase bg-gray-100">
                   <tr>
-                    <th className="px-6 py-3">Passenger</th>
-                    <th className="px-6 py-3">Route</th>
-                    <th className="px-6 py-3">Fare</th>
-                    <th className="px-6 py-3">Status</th>
-                    <th className="px-6 py-3 text-center">Action</th>
+                    <th className="px-5 py-3">Passenger</th>
+                    <th className="px-5 py-3">Route</th>
+                    <th className="px-5 py-3">Date</th>
+                    <th className="px-5 py-3">Details</th>
+                    <th className="px-5 py-3">Status</th>
+                    <th className="px-5 py-3 text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {trips.length > 0 ? (
-                    trips.map((trip) => (
-                      <tr key={trip.id} className="border-b">
-                        <td className="px-6 py-4 font-medium">
+                  {/* --- UPDATED: Map over `filteredTrips` instead of `trips` --- */}
+                  {filteredTrips.length > 0 ? (
+                    filteredTrips.map((trip) => (
+                      <tr key={trip.id} className="border-b hover:bg-gray-50">
+                        <td className="px-5 py-4 font-medium">
                           {trip.passenger}
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-5 py-4">
                           {trip.route.pickup.name} ➜ {trip.route.drop.name}
                         </td>
-                        <td className="px-6 py-4">{trip.fare} AF</td>
-                        <td className="px-6 py-4">
+                        <td className="px-5 py-4 text-gray-600">
+                          {trip.scheduled_for ? (
+                            <div className="text-blue-700">
+                              <span className="font-semibold block">
+                                Scheduled
+                              </span>
+                              <span className="text-xs">
+                                {new Date(trip.scheduled_for).toLocaleString()}
+                              </span>
+                            </div>
+                          ) : (
+                            <div>
+                              <span className="font-semibold block">
+                                Requested
+                              </span>
+                              <span className="text-xs">
+                                {new Date(trip.request_time).toLocaleString()}
+                              </span>
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-3">
+                            <span
+                              className="flex items-center gap-1.5"
+                              title="Passenger Count"
+                            >
+                              <Users size={16} className="text-gray-500" />
+                              {trip.passenger_count}
+                            </span>
+                            {trip.notes_for_driver && (
+                              <span className="text-gray-400">|</span>
+                            )}
+                            {trip.notes_for_driver && (
+                              <span className="text-blue-600" title="Has Notes">
+                                <MessageSquare size={16} />
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-5 py-4">
                           <StatusBadge status={trip.status} />
                         </td>
-                        <td className="px-6 py-4 text-center">
+                        <td className="px-5 py-4 text-center">
                           {trip.status === "requested" ? (
                             <button
                               onClick={() => setAssigningTrip(trip)}
@@ -244,18 +357,21 @@ export default function AdminTripManagement() {
                               Assign Driver
                             </button>
                           ) : (
-                            trip.driver_name || "N/A"
+                            <span className="font-medium text-gray-800">
+                              {trip.driver_name || "N/A"}
+                            </span>
                           )}
                         </td>
                       </tr>
                     ))
                   ) : (
+                    // --- UPDATED: Dynamic "no results" message ---
                     <tr>
                       <td
-                        colSpan="5"
-                        className="text-center py-10 text-gray-500"
+                        colSpan="6"
+                        className="text-center py-16 text-gray-500"
                       >
-                        No pending trip requests.
+                        No trips found for the selected filter.
                       </td>
                     </tr>
                   )}

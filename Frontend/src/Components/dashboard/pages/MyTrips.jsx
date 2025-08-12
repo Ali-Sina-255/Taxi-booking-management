@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import Swal from "sweetalert2";
 import { FaListAlt } from "react-icons/fa";
 import { useSelector } from "react-redux";
-import { Loader2 } from "lucide-react";
+import { Loader2, Users, Calendar, MessageSquare } from "lucide-react"; // <-- Import new icons
 import { store } from "../../../state/store";
 import axios from "axios";
 
@@ -22,10 +22,10 @@ const createApiClient = () => {
 
 const StatusBadge = ({ status }) => {
   const statusStyles = {
-    requested: "bg-blue-100 text-blue-700",
+    requested: "bg-blue-100 text-blue-800",
     in_progress: "bg-yellow-100 text-yellow-800",
-    completed: "bg-green-100 text-green-700",
-    cancelled: "bg-red-100 text-red-700",
+    completed: "bg-green-100 text-green-800",
+    cancelled: "bg-red-100 text-red-800",
   };
   const style =
     statusStyles[status?.toLowerCase()] || "bg-gray-100 text-gray-700";
@@ -34,7 +34,7 @@ const StatusBadge = ({ status }) => {
     : "Unknown";
   return (
     <span
-      className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ring-gray-500/10 ${style}`}
+      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${style}`}
     >
       {capitalizedStatus}
     </span>
@@ -46,12 +46,16 @@ export default function MyTrips() {
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // --- NEW STATE for the notes modal ---
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedTripNotes, setSelectedTripNotes] = useState("");
+
   const fetchTripData = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     const api = createApiClient();
     try {
-      // This endpoint now returns the full route object nested in each trip.
+      // The API response now includes passenger_count, notes_for_driver, and scheduled_for
       const tripsResponse = await api.get("/api/v1/vehicle/trips/");
       const tripsData = Array.isArray(tripsResponse.data.results)
         ? tripsResponse.data.results
@@ -69,66 +73,165 @@ export default function MyTrips() {
     fetchTripData();
   }, [fetchTripData]);
 
-  return (
-    <div className="p-3 md:p-6 w-full">
-      <div className="bg-white p-6 shadow-md rounded-lg max-w-5xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-4 flex items-center gap-3">
-          <FaListAlt /> My Trip History
-        </h1>
+  // --- NEW: Function to open the notes modal ---
+  const handleViewNotes = (notes) => {
+    setSelectedTripNotes(notes);
+    setIsModalOpen(true);
+  };
 
-        <div className="overflow-x-auto">
-          {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
-            </div>
-          ) : (
-            <table className="w-full text-sm text-left text-gray-500">
-              <thead className="text-xs text-gray-700 uppercase bg-gray-100">
-                <tr>
-                  <th scope="col" className="px-6 py-3">
-                    Route
-                  </th>
-                  <th scope="col" className="px-6 py-3">
-                    Date Requested
-                  </th>
-                  <th scope="col" className="px-6 py-3">
-                    Fare
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-center">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {Array.isArray(trips) && trips.length > 0 ? (
-                  trips.map((trip) => (
-                    <tr key={trip.id} className="border-b hover:bg-gray-50">
-                      <td className="px-6 py-4 font-medium text-gray-900">
-                        {trip.route
-                          ? `${trip.route.pickup.name} ➜ ${trip.route.drop.name}`
-                          : "Route details unavailable"}
-                      </td>
-                      <td className="px-6 py-4 text-gray-600">
-                        {new Date(trip.request_time).toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4">{trip.fare} AF</td>
-                      <td className="px-6 py-4 text-center">
-                        <StatusBadge status={trip.status} />
+  return (
+    <>
+      <div className="p-3 md:p-6 w-full">
+        <div className="bg-white p-6 shadow-md rounded-lg max-w-6xl mx-auto">
+          <h1 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-4 flex items-center gap-3">
+            <FaListAlt /> My Trip History
+          </h1>
+
+          <div className="overflow-x-auto">
+            {loading ? (
+              <div className="flex justify-center items-center h-64">
+                <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
+              </div>
+            ) : (
+              <table className="w-full text-sm text-left text-gray-500">
+                {/* --- UPDATED TABLE HEADERS --- */}
+                <thead className="text-xs text-gray-700 uppercase bg-gray-100">
+                  <tr>
+                    <th scope="col" className="px-6 py-3">
+                      Route
+                    </th>
+                    <th scope="col" className="px-6 py-3">
+                      Date
+                    </th>
+                    <th scope="col" className="px-6 py-3">
+                      Details
+                    </th>
+                    <th scope="col" className="px-6 py-3">
+                      Fare
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-center">
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Array.isArray(trips) && trips.length > 0 ? (
+                    trips.map((trip) => (
+                      <tr key={trip.id} className="border-b hover:bg-gray-50">
+                        {/* Route (Unchanged) */}
+                        <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                          {trip.route
+                            ? `${trip.route.pickup.name} ➜ ${trip.route.drop.name}`
+                            : "N/A"}
+                        </td>
+
+                        {/* --- NEW: Conditional Date Column --- */}
+                        <td className="px-6 py-4 text-gray-600">
+                          {trip.scheduled_for ? (
+                            <div className="flex items-center gap-2 text-blue-700">
+                              <Calendar size={14} />
+                              <div>
+                                <span className="block font-semibold">
+                                  Scheduled For
+                                </span>
+                                <span className="text-xs">
+                                  {new Date(
+                                    trip.scheduled_for
+                                  ).toLocaleString()}
+                                </span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div>
+                              <span className="block font-semibold">
+                                Requested On
+                              </span>
+                              <span className="text-xs">
+                                {new Date(trip.request_time).toLocaleString()}
+                              </span>
+                            </div>
+                          )}
+                        </td>
+
+                        {/* --- NEW: Details Column with Passenger Count and Notes Button --- */}
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-4">
+                            <span
+                              className="flex items-center gap-1.5"
+                              title="Passenger Count"
+                            >
+                              <Users size={16} className="text-gray-500" />
+                              {trip.passenger_count}
+                            </span>
+                            {trip.notes_for_driver && (
+                              <button
+                                onClick={() =>
+                                  handleViewNotes(trip.notes_for_driver)
+                                }
+                                className="text-blue-600 hover:text-blue-800"
+                                title="View Notes"
+                              >
+                                <MessageSquare size={16} />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Fare (Unchanged) */}
+                        <td className="px-6 py-4 font-semibold">
+                          {trip.fare} AF
+                        </td>
+
+                        {/* Status (Unchanged) */}
+                        <td className="px-6 py-4 text-center">
+                          <StatusBadge status={trip.status} />
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan="5"
+                        className="text-center py-16 text-gray-500"
+                      >
+                        You have not requested any trips yet.
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="4" className="text-center py-16 text-gray-500">
-                      You have not requested any trips yet.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          )}
+                  )}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* --- NEW: Notes Viewer Modal --- */}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-2xl p-6 max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold mb-4 text-gray-800 border-b pb-2">
+              Notes for Driver
+            </h3>
+            <p className="text-gray-600 whitespace-pre-wrap">
+              {selectedTripNotes}
+            </p>
+            <div className="mt-6 text-right">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="secondary-btn"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
