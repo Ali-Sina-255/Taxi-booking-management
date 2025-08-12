@@ -12,49 +12,15 @@ import {
   ArrowRight,
   Route,
 } from "lucide-react";
-import Select from "react-select";
 import { AnimatePresence, motion } from "framer-motion";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL || "http://127.0.0.1:8000";
 
-// Custom styles for the react-select dropdown
-const selectStyles = {
-  control: (provided) => ({
-    ...provided,
-    padding: "0.5rem",
-    borderRadius: "0.5rem",
-    border: "1px solid #e5e7eb",
-    boxShadow: "none",
-    "&:hover": { borderColor: "#9ca3af" },
-  }),
-  option: (provided, state) => ({
-    ...provided,
-    backgroundColor: state.isSelected
-      ? "#2563eb"
-      : state.isFocused
-      ? "#dbeafe"
-      : "white",
-    color: state.isSelected ? "white" : "black",
-    cursor: "pointer",
-    padding: "0.75rem 1rem",
-  }),
-  placeholder: (provided) => ({
-    ...provided,
-    color: "#6b7280",
-  }),
-};
-
-// --- Reusable Component for Displaying a Route Card ---
 const RouteCard = ({ route, onSelect }) => (
   <motion.div
-    whileHover={{ scale: 1.05, y: -5 }}
+    whileHover={{ scale: 1.03, y: -4 }}
     className="bg-white p-4 rounded-lg border shadow-sm cursor-pointer"
-    onClick={() =>
-      onSelect({
-        value: route,
-        label: `${route.pickup.name} ➜ ${route.drop.name}`,
-      })
-    }
+    onClick={() => onSelect(route)}
   >
     <div className="flex items-center gap-3 text-gray-700 font-semibold">
       <MapPin className="text-red-500" size={18} />
@@ -76,7 +42,8 @@ export default function City() {
   const [submitting, setSubmitting] = useState(false);
   const [requested, setRequested] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedRoute, setSelectedRoute] = useState(null);
+  const [selectedPickup, setSelectedPickup] = useState("");
+  const [selectedDropoff, setSelectedDropoff] = useState("");
   const [passengerCount, setPassengerCount] = useState(1);
   const [notes, setNotes] = useState("");
   const [isScheduled, setIsScheduled] = useState(false);
@@ -107,32 +74,41 @@ export default function City() {
     fetchData();
   }, [fetchData]);
 
-  const routeOptions = useMemo(() => {
-    return routes.map((route) => ({
-      value: route,
-      label: `${route.pickup.name} ➜ ${route.drop.name}`,
-    }));
+  const pickupLocations = useMemo(() => {
+    const locations = new Map();
+    routes.forEach((route) => {
+      if (!locations.has(route.pickup.id)) {
+        locations.set(route.pickup.id, route.pickup);
+      }
+    });
+    return Array.from(locations.values());
   }, [routes]);
 
-  // A small list of recent/popular routes to display as cards
-  const recentRoutes = useMemo(() => {
-    return routes.slice(0, 4); // Display the first 4 routes
-  }, [routes]);
+  const dropoffLocations = useMemo(() => {
+    if (!selectedPickup) return [];
+    return routes
+      .filter((route) => route.pickup.id === selectedPickup)
+      .map((route) => route.drop);
+  }, [selectedPickup, routes]);
+
+  const selectedRoute = useMemo(() => {
+    if (!selectedPickup || !selectedDropoff) return null;
+    return routes.find(
+      (route) =>
+        route.pickup.id === selectedPickup && route.drop.id === selectedDropoff
+    );
+  }, [selectedPickup, selectedDropoff, routes]);
 
   const handleReviewTrip = (e) => {
     e.preventDefault();
     if (!selectedRoute) {
-      Swal.fire(
-        "Route Required",
-        "Please select a route for your trip.",
-        "warning"
-      );
+      Swal.fire("Route Required", "Please select a valid route.", "warning");
       return;
     }
     if (isScheduled && !scheduledDateTime) {
       Swal.fire(
         "Time Required",
-        "Please specify the date and time for your trip.",
+        "Please specify the date and time.",
         "warning"
       );
       return;
@@ -144,7 +120,7 @@ export default function City() {
     setIsModalOpen(false);
     setSubmitting(true);
     const payload = {
-      route_id: selectedRoute.value.pk,
+      route_id: selectedRoute.pk,
       passenger_count: passengerCount,
       notes_for_driver: notes,
       scheduled_for: isScheduled ? scheduledDateTime : null,
@@ -168,12 +144,27 @@ export default function City() {
 
   const resetForm = () => {
     setRequested(false);
-    setSelectedRoute(null);
+    setSelectedPickup("");
+    setSelectedDropoff("");
     setPassengerCount(1);
     setNotes("");
     setIsScheduled(false);
     setScheduledDateTime("");
   };
+
+  const handlePickupChange = (e) => {
+    setSelectedPickup(e.target.value);
+    setSelectedDropoff("");
+  };
+
+  const handleRouteCardSelect = (route) => {
+    setSelectedPickup(route.pickup.id);
+    setSelectedDropoff(route.drop.id);
+  };
+
+  const recentRoutes = useMemo(() => {
+    return routes.slice(0, 4);
+  }, [routes]);
 
   if (!accessToken) {
     return (
@@ -233,108 +224,154 @@ export default function City() {
                         سفر خود را رزرو کنید
                       </h2>
                       <p className="text-gray-500 mt-2">
-                        مقصد خود را انتخاب یا جستجو کنید.
+                        یک مسیر را انتخاب یا از لیست کنار انتخاب کنید.
                       </p>
                     </div>
-                    <form onSubmit={handleReviewTrip} className="space-y-6">
+                    <form
+                      onSubmit={handleReviewTrip}
+                      className="flex flex-col gap-6"
+                    >
                       <div>
-                        <label className="block mb-2 font-bold text-gray-700">
-                          کجا می‌روید؟
+                        <label
+                          htmlFor="fromCity"
+                          className="block mb-2 font-medium text-gray-700"
+                        >
+                          شهر مبدا
                         </label>
-                        <Select
-                          options={routeOptions}
-                          value={selectedRoute}
-                          onChange={setSelectedRoute}
-                          styles={selectStyles}
-                          placeholder="جستجوی مبدا و مقصد..."
-                          isClearable
-                        />
+                        <select
+                          id="fromCity"
+                          value={selectedPickup}
+                          onChange={handlePickupChange}
+                          className="w-full p-3 border border-gray-300 rounded-md bg-gray-50"
+                          required
+                        >
+                          <option value="" disabled>
+                            انتخاب کنید...
+                          </option>
+                          {pickupLocations.map((loc) => (
+                            <option key={loc.id} value={loc.id}>
+                              {loc.name}
+                            </option>
+                          ))}
+                        </select>
                       </div>
+                      <div>
+                        <label
+                          htmlFor="toCity"
+                          className="block mb-2 font-medium text-gray-700"
+                        >
+                          شهر مقصد
+                        </label>
+                        <select
+                          id="toCity"
+                          value={selectedDropoff}
+                          onChange={(e) => setSelectedDropoff(e.target.value)}
+                          className="w-full p-3 border border-gray-300 rounded-md bg-gray-50"
+                          required
+                          disabled={!selectedPickup}
+                        >
+                          <option value="" disabled>
+                            ابتدا شهر مبدا را انتخاب کنید...
+                          </option>
+                          {dropoffLocations.map((loc) => (
+                            <option key={loc.id} value={loc.id}>
+                              {loc.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* --- THIS IS THE NEW PRICE DISPLAY SECTION --- */}
                       <AnimatePresence>
                         {selectedRoute && (
                           <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto" }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="overflow-hidden space-y-6"
+                            initial={{ opacity: 0, height: 0, y: -10 }}
+                            animate={{ opacity: 1, height: "auto", y: 0 }}
+                            exit={{ opacity: 0, height: 0, y: -10 }}
+                            className="bg-green-50 text-center p-4 rounded-lg border border-green-200"
                           >
-                            <div>
-                              <label
-                                htmlFor="passengerCount"
-                                className="block mb-2 font-bold text-gray-700"
-                              >
-                                تعداد مسافر
-                              </label>
-                              <input
-                                type="number"
-                                id="passengerCount"
-                                value={passengerCount}
-                                onChange={(e) =>
-                                  setPassengerCount(Number(e.target.value))
-                                }
-                                min="1"
-                                max="10"
-                                className="w-full input-field"
-                              />
-                            </div>
-                            <div>
-                              <label
-                                htmlFor="notes"
-                                className="block mb-2 font-bold text-gray-700"
-                              >
-                                یادداشت برای راننده (اختیاری)
-                              </label>
-                              <textarea
-                                id="notes"
-                                value={notes}
-                                onChange={(e) => setNotes(e.target.value)}
-                                rows="3"
-                                placeholder="مثال: من نزدیک دروازه آبی هستم..."
-                                className="w-full input-field"
-                              />
-                            </div>
-                            <div className="border-t pt-6">
-                              <label className="flex items-center gap-3 cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={isScheduled}
-                                  onChange={(e) =>
-                                    setIsScheduled(e.target.checked)
-                                  }
-                                  className="h-5 w-5 rounded text-blue-600 focus:ring-blue-500"
-                                />
-                                <span className="font-semibold">
-                                  سفر برای بعدا رزرو شود؟
-                                </span>
-                              </label>
-                              {isScheduled && (
-                                <motion.div
-                                  initial={{ opacity: 0, height: 0 }}
-                                  animate={{ opacity: 1, height: "auto" }}
-                                  className="mt-4"
-                                >
-                                  <label
-                                    htmlFor="scheduledDateTime"
-                                    className="block mb-2 font-bold text-gray-700"
-                                  >
-                                    تاریخ و زمان حرکت
-                                  </label>
-                                  <input
-                                    type="datetime-local"
-                                    id="scheduledDateTime"
-                                    value={scheduledDateTime}
-                                    onChange={(e) =>
-                                      setScheduledDateTime(e.target.value)
-                                    }
-                                    className="w-full input-field"
-                                    required
-                                  />
-                                </motion.div>
-                              )}
-                            </div>
+                            <p className="text-gray-600">قیمت تخمینی سفر</p>
+                            <p className="text-3xl font-bold text-green-600">
+                              {selectedRoute.price_af}{" "}
+                              <span className="text-lg">افغانی</span>
+                            </p>
                           </motion.div>
                         )}
                       </AnimatePresence>
+
+                      {/* The rest of the form fields */}
+                      <div>
+                        <label
+                          htmlFor="passengerCount"
+                          className="block mb-2 font-medium text-gray-700"
+                        >
+                          تعداد مسافر
+                        </label>
+                        <input
+                          type="number"
+                          id="passengerCount"
+                          value={passengerCount}
+                          onChange={(e) =>
+                            setPassengerCount(Number(e.target.value))
+                          }
+                          min="1"
+                          max="10"
+                          className="w-full input-field"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="notes"
+                          className="block mb-2 font-medium text-gray-700"
+                        >
+                          یادداشت برای راننده (اختیاری)
+                        </label>
+                        <textarea
+                          id="notes"
+                          value={notes}
+                          onChange={(e) => setNotes(e.target.value)}
+                          rows="3"
+                          placeholder="مثال: من نزدیک دروازه آبی هستم..."
+                          className="w-full input-field"
+                        />
+                      </div>
+                      <div className="border-t pt-4">
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={isScheduled}
+                            onChange={(e) => setIsScheduled(e.target.checked)}
+                            className="h-5 w-5 rounded text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="font-medium">
+                            سفر برای بعدا رزرو شود؟
+                          </span>
+                        </label>
+                        {isScheduled && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            className="mt-4"
+                          >
+                            <label
+                              htmlFor="scheduledDateTime"
+                              className="block mb-2 font-medium text-gray-700"
+                            >
+                              تاریخ و زمان حرکت
+                            </label>
+                            <input
+                              type="datetime-local"
+                              id="scheduledDateTime"
+                              value={scheduledDateTime}
+                              onChange={(e) =>
+                                setScheduledDateTime(e.target.value)
+                              }
+                              className="w-full input-field"
+                              required
+                            />
+                          </motion.div>
+                        )}
+                      </div>
                       <button
                         type="submit"
                         className="primary-btn w-full flex items-center justify-center gap-2 py-3.5 text-lg"
@@ -359,11 +396,11 @@ export default function City() {
               >
                 <div className="bg-white p-6 rounded-xl shadow-lg">
                   <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-3">
-                    <Route /> مسیرهای پرطرفدار
+                    <Route /> مسیرهای اخیر
                   </h3>
                   {loading ? (
                     <div className="text-center p-4 text-gray-500">
-                      در حال بارگذاری مسیرها...
+                      در حال بارگذاری...
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -371,7 +408,7 @@ export default function City() {
                         <RouteCard
                           key={route.id}
                           route={route}
-                          onSelect={setSelectedRoute}
+                          onSelect={handleRouteCardSelect}
                         />
                       ))}
                     </div>
@@ -383,9 +420,10 @@ export default function City() {
         </AnimatePresence>
       </div>
 
+      {/* The Confirmation Modal remains unchanged */}
       {isModalOpen && selectedRoute && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4 transition-opacity"
+          className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4"
           onClick={() => setIsModalOpen(false)}
         >
           <div
@@ -399,8 +437,7 @@ export default function City() {
               <div className="flex justify-between items-center border-b pb-3">
                 <span className="font-semibold text-gray-600">مسیر:</span>
                 <span className="font-bold text-lg">
-                  {selectedRoute.value.pickup.name} ➜{" "}
-                  {selectedRoute.value.drop.name}
+                  {selectedRoute.pickup.name} ➜ {selectedRoute.drop.name}
                 </span>
               </div>
               <div className="flex justify-between items-center border-b pb-3">
@@ -408,7 +445,7 @@ export default function City() {
                   کرایه تخمینی:
                 </span>
                 <span className="font-bold text-lg text-green-600">
-                  {selectedRoute.value.price_af} افغانی
+                  {selectedRoute.price_af} افغانی
                 </span>
               </div>
               <div className="flex justify-between items-center border-b pb-3">
