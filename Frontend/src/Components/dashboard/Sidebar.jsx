@@ -43,95 +43,97 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
     });
   };
 
-  // This is the complete and corrected menu structure
-  const allMenuItems = [
-    // --- ADMIN SECTION ---
-    {
-      name: "Reporting Dashboard",
-      value: "reporting", // Unique value for the new dashboard
-      icon: <MdDashboard />,
-      roles: ["admin"],
-    },
-    {
-      name: "Trip Management",
-      value: "trips", // This now correctly links to the trip list
-      icon: <FaTaxi />,
-      roles: ["admin"],
-    },
-    {
-      name: "User Management",
-      value: "users",
-      icon: <FaUsersCog />,
-      roles: ["admin"],
-    },
-    {
-      name: "Driver Management",
-      value: "drivers",
-      icon: <FaCarAlt />,
-      roles: ["admin"],
-    },
-    {
-      name: "Driver Applications",
-      value: "applications",
-      icon: <FaUserCheck />,
-      roles: ["admin"],
-    },
-    {
-      name: "Vehicle Management",
-      value: "vehicles",
-      icon: <FaCar />,
-      roles: ["admin"],
-    },
-    {
-      name: "Locations",
-      value: "locations",
-      icon: <FaMapMarkedAlt />,
-      roles: ["admin"],
-    },
-    { name: "Routes", value: "routes", icon: <FaRoute />, roles: ["admin"] },
-    
-    // --- DRIVER SECTION ---
-    {
-      name: "Available Trips",
-      value: "trip-requests",
-      icon: <FaListAlt />,
-      roles: ["driver"],
-    },
-    {
-      name: "My Vehicles",
-      value: "vehicles",
-      icon: <FaCar />,
-      roles: ["driver"],
-    },
-    
-    // --- PASSENGER SECTION ---
-    {
-      name: "Request a Trip",
-      value: "request-trip",
-      icon: <FaTaxi />,
-      roles: ["passenger"],
-    },
-    {
-      name: "My Trips",
-      value: "my-trips",
-      icon: <FaListAlt />,
-      roles: ["passenger"],
-    },
-    
-    // --- COMMON SECTION ---
-    {
-      name: "Profile",
-      value: "profile",
-      icon: <FaUser />,
-      roles: ["admin", "driver", "passenger"],
-    },
-    {
-      name: "Sign Out",
-      value: "signout",
-      icon: <FaSignOutAlt />,
-      roles: ["admin", "driver", "passenger"],
-    },
-  ];
+ const allMenuItems = [
+   // --- ADMIN SECTION ---
+   {
+     name: "داشبورد",
+     value: "dashboard",
+     icon: <MdDashboardCustomize />,
+     roles: ["admin"],
+   },
+   {
+     name: "مدیریت کاربران",
+     value: "users",
+     icon: <FaUsersCog />,
+     roles: ["admin"],
+   },
+   {
+     name: "مدیریت راننده‌ها",
+     value: "drivers",
+     icon: <FaCarAlt />,
+     roles: ["admin"],
+   },
+   {
+     name: "مدیریت سفرها",
+     value: "trips",
+     icon: <FaTaxi />,
+     roles: ["admin"],
+   },
+   {
+     name: "درخواست‌های راننده",
+     value: "applications",
+     icon: <FaUserCheck />,
+     roles: ["admin"],
+   },
+   {
+     name: "مدیریت وسایل نقلیه",
+     value: "vehicles",
+     icon: <FaCar />,
+     roles: ["admin"],
+   },
+   {
+     name: "مکان‌ها",
+     value: "locations",
+     icon: <FaMapMarkedAlt />,
+     roles: ["admin"],
+   },
+   {
+     name: "مسیرها",
+     value: "routes",
+     icon: <FaRoute />,
+     roles: ["admin"],
+   },
+   // --- DRIVER SECTION ---
+   {
+     name: "سفرهای موجود",
+     value: "trip-requests",
+     icon: <FaListAlt />,
+     roles: ["driver"],
+   },
+   {
+     name: "وسایل نقلیه من",
+     value: "vehicles",
+     icon: <FaCar />,
+     roles: ["driver"],
+   },
+   // --- PASSENGER SECTION ---
+   {
+     name: "درخواست سفر",
+     value: "request-trip",
+     icon: <FaTaxi />,
+     roles: ["passenger"],
+   },
+   {
+     name: "سفرهای من",
+     value: "my-trips",
+     icon: <FaListAlt />,
+     roles: ["passenger"],
+   },
+   // --- COMMON SECTION ---
+   {
+     name: "پروفایل",
+     value: "profile",
+     icon: <FaUser />,
+     roles: ["admin", "driver", "passenger"],
+   },
+   {
+     name: "خروج",
+     value: "signout",
+     icon: <FaSignOutAlt />,
+     roles: ["admin", "driver", "passenger"],
+   },
+ ];
+
 
   const accessibleComponents = allMenuItems.filter((item) =>
     item.roles.includes(profile?.role)

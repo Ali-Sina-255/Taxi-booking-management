@@ -75,9 +75,14 @@ export default function DriverApplications() {
 
   return (
     <div className="p-3 md:p-6 w-full">
-      <div className="bg-white p-6 shadow-md rounded-lg max-w-7xl mx-auto">
+      <div className="bg-white p-6 rounded-lg">
         <h1 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-4 flex items-center gap-3">
-          <FaShieldAlt /> Driver Applications
+          <span className="p-2 rounded-full bg-gray-300">
+            <FaShieldAlt />
+          </span>{" "}
+          <span className="text-xl font-Ray_black text-gray-600">
+            درخواست‌های راننده
+          </span>{" "}
         </h1>
         <div className="overflow-x-auto">
           {loading ? (
@@ -85,20 +90,25 @@ export default function DriverApplications() {
               <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
             </div>
           ) : (
-            <table className="w-full text-sm text-left text-gray-500">
-              <thead className="text-xs text-gray-700 uppercase bg-gray-100">
+            <table className="w-full text-sm text-center text-gray-500">
+              <thead className="text-base text-gray-700 uppercase bg-gray-300">
                 <tr>
-                  <th className="px-6 py-3">Applicant</th>
-                  <th className="px-6 py-3">License No.</th>
-                  <th className="px-6 py-3">Experience</th>
-                  <th className="px-6 py-3 text-center">Status</th>
-                  <th className="px-6 py-3 text-center">Actions</th>
+                  <th className="px-6 py-3">متقاضی</th>
+                  <th className="px-6 py-3">شماره گواهی‌نامه</th>
+                  <th className="px-6 py-3">تجربه</th>
+                  <th className="px-6 py-3 text-center">وضعیت</th>
+                  <th className="px-6 py-3 text-center">عملیات</th>
                 </tr>
               </thead>
               <tbody>
                 {applications.length > 0 ? (
-                  applications.map((app) => (
-                    <tr key={app.id} className="border-b">
+                  applications.map((app, index) => (
+                    <tr
+                      key={app.id}
+                      className={`border-b hover:bg-gray-50 ${
+                        index % 2 === 0 ? "bg-gray-100" : ""
+                      } `}
+                    >
                       <td className="px-6 py-4 font-medium">
                         {app.applicant_name}
                         <br />
@@ -120,13 +130,13 @@ export default function DriverApplications() {
                               onClick={() => handleReview(app.id, "approved")}
                               className="action-btn-green flex items-center gap-1"
                             >
-                              <FaUserCheck /> Approve
+                              <FaUserCheck /> تأیید
                             </button>
                             <button
                               onClick={() => handleReview(app.id, "denied")}
                               className="action-btn-red flex items-center gap-1"
                             >
-                              <FaUserTimes /> Deny
+                              <FaUserTimes /> رد کردن
                             </button>
                           </div>
                         )}
@@ -136,7 +146,7 @@ export default function DriverApplications() {
                 ) : (
                   <tr>
                     <td colSpan="5" className="text-center py-16 text-gray-500">
-                      No pending applications found.
+                      درخواستی در حال انتظار یافت نشد.
                     </td>
                   </tr>
                 )}

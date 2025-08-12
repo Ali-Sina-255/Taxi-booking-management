@@ -53,19 +53,26 @@ export default function DriverManagement() {
 
   return (
     <div className="p-3 md:p-6 w-full">
-      <div className="bg-white p-6 shadow-md rounded-lg max-w-7xl mx-auto">
+      <div className="bg-white p-6  rounded-lg ">
         <h1 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-4 flex items-center gap-3">
-          <FaCar /> Driver Management
+          <span className="p-2 rounded-full bg-gray-300">
+            <FaCar />
+          </span>{" "}
+          <span className="text-xl font-Ray_black text-gray-600">
+            مدیریت رانندگان
+          </span>{" "}
         </h1>
-        <div className="mb-4 relative">
-          <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <div className="flex items-center mb-4 w-full max-w-md border border-gray-300 rounded-full overflow-hidden">
           <input
             type="text"
-            placeholder="Search by name or email..."
+            placeholder="جستجو بر اساس نام یا ایمیل..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full max-w-md pl-10 pr-4 py-2 border border-gray-300 rounded-full"
+            className="flex-grow py-2 pr-5 outline-none text-right placeholder-gray-400"
           />
+          <div className="pl-4 pr-2 text-gray-400">
+            <FaSearch size={20} />
+          </div>
         </div>
         <div className="overflow-x-auto">
           {loading ? (
@@ -73,18 +80,23 @@ export default function DriverManagement() {
               <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
             </div>
           ) : (
-            <table className="w-full text-sm text-left text-gray-500">
-              <thead className="text-xs text-gray-700 uppercase bg-gray-100">
+            <table className="w-full  text-center text-gray-500">
+              <thead className="text-base text-gray-700 uppercase bg-gray-300">
                 <tr>
-                  <th className="px-5 py-3">Full Name</th>
-                  <th className="px-5 py-3">Email</th>
-                  <th className="px-5 py-3">Date Joined</th>
-                  <th className="px-5 py-3 text-center">Status</th>
+                  <th className="px-5 py-3">نام کامل</th>
+                  <th className="px-5 py-3">ایمیل</th>
+                  <th className="px-5 py-3">تاریخ عضویت</th>
+                  <th className="px-5 py-3 text-center">وضعیت</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredDrivers.map((driver) => (
-                  <tr key={driver.pkid} className="border-b hover:bg-gray-50">
+                {filteredDrivers.map((driver , index) => (
+                  <tr
+                    key={driver.pkid}
+                    className={`border-b hover:bg-gray-50 ${
+                      index % 2 === 0 ? "bg-gray-100" : ""
+                    } `}
+                  >
                     <td className="px-5 py-4 font-medium text-gray-900">
                       {driver.full_name}
                     </td>

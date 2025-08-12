@@ -126,11 +126,15 @@ export default function LocationManagement() {
 
   return (
     <div className="p-3 md:p-6 w-full px-5">
-      <div className="w-full py-4 px-5 shadow-lg bg-white pb-14 rounded-md">
-        <h2 className="text-2xl text-center font-bold mb-6 flex items-center justify-center gap-2">
-          <FaMapMarkedAlt />{" "}
-          {editingLocation ? "Edit Location" : "Add New Location"}
-        </h2>
+      <div className="w-full py-4 px-5  bg-white pb-14 rounded-md">
+        <h1 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-4 flex items-center gap-3">
+          <span className="p-2 rounded-full bg-gray-300">
+            <FaMapMarkedAlt />{" "}
+          </span>{" "}
+          <span className="text-xl font-Ray_black text-gray-600">
+            {editingLocation ? "ویرایش مکان" : "افزودن مکان جدید"}
+          </span>{" "}
+        </h1>
 
         <form
           onSubmit={handleSubmit}
@@ -141,20 +145,23 @@ export default function LocationManagement() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g., Central Airport"
-            className="w-full input-field"
+            className="w-full input-field1"
             required
           />
           <div className="flex items-center gap-4">
-            <button type="submit" className="primary-btn whitespace-nowrap">
+            <button
+              type="submit"
+              className="rounded-md border border-transparent bg-primary px-8 py-3 text-base font-medium text-white hover:bg-white hover:border hover:border-primary hover:text-primary focus:outline-none cursor-pointer  transition-colors duration-500 whitespace-nowrap"
+            >
               {editingLocation ? "Update" : "Add"}
             </button>
             {editingLocation && (
               <button
                 type="button"
                 onClick={resetForm}
-                className="secondary-btn"
+                className="secondry-btn"
               >
-                Cancel
+                لغو
               </button>
             )}
           </div>
@@ -164,14 +171,14 @@ export default function LocationManagement() {
           id="location-table"
           className="w-full max-w-2xl mx-auto bg-white mt-10 border border-gray-200 overflow-x-auto"
         >
-          <table className="w-full text-sm text-left text-gray-500">
-            <thead className="text-xs text-gray-700 uppercase bg-gray-100">
+          <table className="w-full text-sm text-center text-gray-500">
+            <thead className="text-base text-gray-700 uppercase bg-gray-300">
               <tr>
                 <th scope="col" className="px-6 py-3">
-                  Location Name
+                  نام مکان
                 </th>
                 <th scope="col" className="px-6 py-3 text-center">
-                  Actions
+                  عملیات
                 </th>
               </tr>
             </thead>
@@ -183,8 +190,13 @@ export default function LocationManagement() {
                   </td>
                 </tr>
               ) : Array.isArray(locations) && locations.length > 0 ? (
-                locations.map((location) => (
-                  <tr key={location.id} className="border-b hover:bg-gray-50">
+                locations.map((location , index) => (
+                  <tr
+                    key={location.id}
+                    className={`border-b hover:bg-gray-50 ${
+                      index % 2 === 0 ? "bg-gray-100" : ""
+                    } `}
+                  >
                     <td className="px-6 py-4 font-medium text-gray-900">
                       {location.name}
                     </td>
