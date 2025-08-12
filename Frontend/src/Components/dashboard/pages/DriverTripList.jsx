@@ -130,33 +130,38 @@ export default function DriverTripList() {
 
   // A single, reusable function to render a table for either trip type
   const renderTable = (trips, type) => (
-    <table className="w-full text-sm text-left text-gray-500">
-      <thead className="text-xs text-gray-700 uppercase bg-gray-100">
+    <table className="w-full text-sm text-center text-gray-500">
+      <thead className="text-base text-gray-700 uppercase bg-gray-300">
         <tr>
           <th scope="col" className="px-5 py-3">
-            Passenger
+            مسافر
           </th>
           <th scope="col" className="px-5 py-3">
-            Route
+            مسیر
           </th>
           <th scope="col" className="px-5 py-3">
-            Date
+            تاریخ
           </th>
           <th scope="col" className="px-5 py-3">
-            Details
+            جزییات
           </th>
           <th scope="col" className="px-5 py-3">
-            Fare
+            کرایه
           </th>
           <th scope="col" className="px-5 py-3 text-center">
-            Action
+            عملیات
           </th>
         </tr>
       </thead>
       <tbody>
         {trips.length > 0 ? (
-          trips.map((trip) => (
-            <tr key={trip.id} className="border-b hover:bg-gray-50">
+          trips.map((trip, index) => (
+            <tr
+              key={trip.id}
+              className={`border-b hover:bg-gray-50 ${
+                index % 2 === 0 ? "bg-gray-100" : ""
+              } `}
+            >
               <td className="px-5 py-4 font-medium">{trip.passenger_name}</td>
               <td className="px-5 py-4">
                 {trip.route
@@ -166,14 +171,14 @@ export default function DriverTripList() {
               <td className="px-5 py-4 text-gray-600">
                 {trip.scheduled_for ? (
                   <div className="text-blue-700">
-                    <span className="font-semibold block">Scheduled</span>
+                    <span className="font-semibold block">زمان‌بندی شده</span>
                     <span className="text-xs">
                       {new Date(trip.scheduled_for).toLocaleString()}
                     </span>
                   </div>
                 ) : (
                   <div>
-                    <span className="font-semibold block">Requested</span>
+                    <span className="font-semibold block">درخواست شده</span>
                     <span className="text-xs">
                       {new Date(trip.request_time).toLocaleString()}
                     </span>
@@ -210,7 +215,7 @@ export default function DriverTripList() {
                     onClick={() => handleAcceptTrip(trip.pk)}
                     className="action-btn-green flex items-center justify-center gap-1 w-full"
                   >
-                    <FaCheck /> Accept
+                    <FaCheck /> قبول کردن
                   </button>
                 )}
                 {type === "assigned" && (
@@ -220,7 +225,7 @@ export default function DriverTripList() {
                         onClick={() => handleUpdateStatus(trip.id, "completed")}
                         className="action-btn-blue w-full"
                       >
-                        Mark as Completed
+                        تکمیل شد
                       </button>
                     ) : (
                       <StatusBadge status={trip.status} />
@@ -234,8 +239,8 @@ export default function DriverTripList() {
           <tr>
             <td colSpan="6" className="text-center py-16 text-gray-500">
               {type === "available"
-                ? "No new trip requests on your routes."
-                : "You have no assigned trips."}
+                ? "هیچ درخواست جدید سفری در مسیرهای شما وجود ندارد."
+                : "شما هیچ سفر اختصاص یافته‌ای ندارید."}
             </td>
           </tr>
         )}
@@ -246,9 +251,14 @@ export default function DriverTripList() {
   return (
     <>
       <div className="p-3 md:p-6 w-full">
-        <div className="bg-white p-6 shadow-md rounded-lg max-w-7xl mx-auto">
+        <div className="bg-white p-6  rounded-lg ">
           <h1 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-4 flex items-center gap-3">
-            <FaListAlt /> Driver Dashboard
+            <span className="p-2 rounded-full bg-gray-300">
+              <FaListAlt />
+            </span>{" "}
+            <span className="text-xl font-Ray_black text-gray-600">
+              داشبورد راننده
+            </span>{" "}
           </h1>
 
           <div className="mb-6 flex border-b">
@@ -260,7 +270,7 @@ export default function DriverTripList() {
                   : "text-gray-500 hover:text-gray-800"
               }`}
             >
-              Available Trip Requests ({availableTrips.length})
+              درخواست‌های سفر موجود ({availableTrips.length})
             </button>
             <button
               onClick={() => setActiveTab("assigned")}
@@ -270,7 +280,7 @@ export default function DriverTripList() {
                   : "text-gray-500 hover:text-gray-800"
               }`}
             >
-              My Assigned Trips ({assignedTrips.length})
+              سفرهای اختصاص داده‌شده من ({assignedTrips.length})
             </button>
           </div>
 
@@ -298,7 +308,7 @@ export default function DriverTripList() {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-semibold mb-4 text-gray-800 border-b pb-2">
-              Passenger's Note
+              یادداشت مسافر
             </h3>
             <p className="text-gray-600 whitespace-pre-wrap">
               {selectedTripNotes}
@@ -306,9 +316,9 @@ export default function DriverTripList() {
             <div className="mt-6 text-right">
               <button
                 onClick={() => setIsNotesModalOpen(false)}
-                className="secondary-btn"
+                className="secondry-btn"
               >
-                Close
+                بستن
               </button>
             </div>
           </div>

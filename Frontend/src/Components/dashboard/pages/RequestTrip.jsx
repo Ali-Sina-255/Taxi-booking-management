@@ -129,7 +129,12 @@ export default function RequestTrip() {
         <div className="max-w-2xl mx-auto">
           <div className="bg-white p-6 shadow-md rounded-lg">
             <h1 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-4 flex items-center gap-3">
-              <FaTaxi /> Request a New Trip
+              <span className="p-2 rounded-full bg-gray-300">
+                <FaTaxi />
+              </span>{" "}
+              <span className="text-xl font-Ray_black text-gray-600">
+                درخواست سفر جدید
+              </span>{" "}
             </h1>
             {loading ? (
               <div className="flex justify-center items-center h-48">
@@ -140,14 +145,14 @@ export default function RequestTrip() {
               <form onSubmit={handleReviewTrip} className="space-y-6">
                 <div>
                   <label className="block mb-2 font-medium text-gray-700">
-                    Choose your route
+                    مسیر خود را انتخاب کنید
                   </label>
                   <Select
                     options={routeOptions}
                     value={selectedRoute}
                     onChange={setSelectedRoute}
                     styles={selectStyles}
-                    placeholder="Select a pickup and drop-off location..."
+                    placeholder="یک مکان مبدا و مقصد را انتخاب کنید..."
                     noOptionsMessage={() => "No routes with available drivers."}
                     isClearable
                   />
@@ -161,7 +166,7 @@ export default function RequestTrip() {
                         htmlFor="passengerCount"
                         className="block mb-2 font-medium text-gray-700"
                       >
-                        Number of Passengers
+                        تعداد مسافران
                       </label>
                       <input
                         type="number"
@@ -180,7 +185,7 @@ export default function RequestTrip() {
                         htmlFor="notes"
                         className="block mb-2 font-medium text-gray-700"
                       >
-                        Notes for Driver (Optional)
+                        یادداشت برای راننده (اختیاری)
                       </label>
                       <textarea
                         id="notes"
@@ -200,7 +205,7 @@ export default function RequestTrip() {
                           className="h-5 w-5 rounded text-blue-600 focus:ring-blue-500"
                         />
                         <span className="font-medium">
-                          Schedule trip for later?
+                          آیا می‌خواهید سفر را برای زمان دیگری برنامه‌ریزی کنید؟
                         </span>
                       </label>
                       {isScheduled && (
@@ -209,7 +214,7 @@ export default function RequestTrip() {
                             htmlFor="scheduledDateTime"
                             className="block mb-2 font-medium text-gray-700"
                           >
-                            Date and Time of Departure
+                            تاریخ و زمان حرکت
                           </label>
                           <input
                             type="datetime-local"
@@ -236,7 +241,7 @@ export default function RequestTrip() {
                     {submitting ? (
                       <Loader2 className="animate-spin" />
                     ) : (
-                      "Review and Request Trip"
+                      "بررسی و درخواست سفر"
                     )}
                   </button>
                 </div>
@@ -254,31 +259,31 @@ export default function RequestTrip() {
         >
           <div className="bg-white rounded-lg shadow-2xl p-6 sm:p-8 max-w-lg w-full">
             <h3 className="text-2xl font-bold mb-6 text-center">
-              Confirm Trip Details
+              تأیید جزئیات سفر
             </h3>
             <div className="space-y-4 text-gray-800">
               <div className="flex justify-between items-center border-b pb-3">
-                <span className="font-semibold text-gray-600">Route:</span>
+                <span className="font-semibold text-gray-600">مسیر:</span>
                 <span className="font-bold text-lg">{selectedRoute.label}</span>
               </div>
               <div className="flex justify-between items-center border-b pb-3">
                 <span className="font-semibold text-gray-600">
-                  Estimated Fare:
+                  کرایه تخمینی:
                 </span>
                 <span className="font-bold text-lg text-green-600">
-                  {selectedRoute.price} AF
+                  {selectedRoute.price} افغانی
                 </span>
               </div>
               <div className="flex justify-between items-center border-b pb-3">
                 <span className="font-semibold text-gray-600 flex items-center gap-2">
-                  <Users size={18} /> Passengers:
+                  <Users size={18} /> مسافران:
                 </span>
                 <span className="font-bold">{passengerCount}</span>
               </div>
               {isScheduled && scheduledDateTime && (
                 <div className="flex justify-between items-center border-b pb-3 text-blue-700">
                   <span className="font-semibold flex items-center gap-2">
-                    <Calendar size={18} /> Scheduled For:
+                    <Calendar size={18} /> زمان تعیین‌شده:
                   </span>
                   <span className="font-bold">
                     {new Date(scheduledDateTime).toLocaleString()}
@@ -288,7 +293,7 @@ export default function RequestTrip() {
               {notes && (
                 <div className="border-b pb-3">
                   <span className="font-semibold text-gray-600 flex items-center gap-2 mb-2">
-                    <MessageSquare size={18} /> Your Note:
+                    <MessageSquare size={18} /> یادداشت شما:
                   </span>
                   <p className="text-gray-700 bg-gray-100 p-3 rounded-md w-full">
                     {notes}
@@ -301,7 +306,7 @@ export default function RequestTrip() {
                 onClick={() => setIsModalOpen(false)}
                 className="secondary-btn w-full"
               >
-                Edit Details
+                ویرایش جزئیات
               </button>
               <button
                 onClick={handleConfirmAndSubmit}
@@ -311,7 +316,7 @@ export default function RequestTrip() {
                 {submitting ? (
                   <Loader2 className="animate-spin" />
                 ) : (
-                  "Confirm & Submit Request"
+                  "تأیید و ارسال درخواست"
                 )}
               </button>
             </div>

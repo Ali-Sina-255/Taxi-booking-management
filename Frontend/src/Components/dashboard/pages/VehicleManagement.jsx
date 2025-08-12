@@ -212,12 +212,12 @@ export default function VehicleManagement() {
   return (
     <div className="p-3 md:p-6 w-full px-5">
       <div className="w-full py-4 px-5 bg-gray-100 pb-14 rounded-md">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-4 flex justify-center items-center gap-3">
+        <h1 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-4 flex items-center gap-3">
           <span className="p-2 rounded-full bg-gray-300">
             <FaCar />
           </span>{" "}
           <span className="text-xl font-Ray_black text-gray-600">
-            {editingVehicle ? "Edit Vehicle" : "Vehicle Management"}
+            {editingVehicle ? "ویرایش وسیله نقلیه" : "مدیریت وسایل نقلیه"}{" "}
           </span>{" "}
         </h1>
 

@@ -82,9 +82,14 @@ export default function MyTrips() {
   return (
     <>
       <div className="p-3 md:p-6 w-full">
-        <div className="bg-white p-6 shadow-md rounded-lg max-w-6xl mx-auto">
+        <div className="bg-white p-6  rounded-lg m">
           <h1 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-4 flex items-center gap-3">
-            <FaListAlt /> My Trip History
+            <span className="p-2 rounded-full bg-gray-300">
+              <FaListAlt />
+            </span>{" "}
+            <span className="text-xl font-Ray_black text-gray-600">
+              تاریخچه سفرهای من
+            </span>{" "}
           </h1>
 
           <div className="overflow-x-auto">
@@ -93,31 +98,36 @@ export default function MyTrips() {
                 <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
               </div>
             ) : (
-              <table className="w-full text-sm text-left text-gray-500">
+              <table className="w-full text-sm text-center text-gray-500">
                 {/* --- UPDATED TABLE HEADERS --- */}
-                <thead className="text-xs text-gray-700 uppercase bg-gray-100">
+                <thead className="text-base text-gray-700 uppercase bg-gray-300">
                   <tr>
                     <th scope="col" className="px-6 py-3">
-                      Route
+                      مسیر
                     </th>
                     <th scope="col" className="px-6 py-3">
-                      Date
+                      تاریخ
                     </th>
                     <th scope="col" className="px-6 py-3">
-                      Details
+                      جزئیات
                     </th>
                     <th scope="col" className="px-6 py-3">
-                      Fare
+                      کرایه
                     </th>
                     <th scope="col" className="px-6 py-3 text-center">
-                      Status
+                      وضعیت
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {Array.isArray(trips) && trips.length > 0 ? (
-                    trips.map((trip) => (
-                      <tr key={trip.id} className="border-b hover:bg-gray-50">
+                    trips.map((trip, index) => (
+                      <tr
+                        key={trip.id}
+                        className={`border-b hover:bg-gray-50 ${
+                          index % 2 === 0 ? "bg-gray-100" : ""
+                        } `}
+                      >
                         {/* Route (Unchanged) */}
                         <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
                           {trip.route
@@ -132,7 +142,7 @@ export default function MyTrips() {
                               <Calendar size={14} />
                               <div>
                                 <span className="block font-semibold">
-                                  Scheduled For
+                                  زمان‌بندی شده برای
                                 </span>
                                 <span className="text-xs">
                                   {new Date(
@@ -144,7 +154,7 @@ export default function MyTrips() {
                           ) : (
                             <div>
                               <span className="block font-semibold">
-                                Requested On
+                                درخواست شده در
                               </span>
                               <span className="text-xs">
                                 {new Date(trip.request_time).toLocaleString()}
@@ -194,7 +204,7 @@ export default function MyTrips() {
                         colSpan="5"
                         className="text-center py-16 text-gray-500"
                       >
-                        You have not requested any trips yet.
+                        شما هنوز هیچ سفری درخواست نکرده‌اید.
                       </td>
                     </tr>
                   )}
