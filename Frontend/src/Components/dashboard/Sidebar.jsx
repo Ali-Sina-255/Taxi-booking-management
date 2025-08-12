@@ -11,6 +11,8 @@ import {
   FaListAlt,
   FaBars,
   FaTimes,
+  FaUserPlus,
+  FaUserCheck,
 } from "react-icons/fa";
 import { useSelector, useDispatch } from "react-redux";
 import { signOutSuccess } from "../../state/userSlice/userSlice";
@@ -149,7 +151,10 @@ const Sidebar = ({ setActiveComponent, activeComponent }) => {
             <li key={index} className="relative group cursor-pointer">
               <a
                 onClick={() => {
-                  if (component.value === "signout") {
+                  // --- FINAL TWEAK ---
+                  if (component.value === "become-a-driver") {
+                    navigate("/become-a-driver");
+                  } else if (component.value === "signout") {
                     handleSignOut();
                   } else {
                     setActiveComponent(component.value);

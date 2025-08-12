@@ -140,3 +140,31 @@ class Trip(TimeStampedModel):
 
         self.full_clean()
         super().save(*args, **kwargs)
+
+class DriverApplication(TimeStampedModel):
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        APPROVED = "approved", "Approved"
+        DENIED = "denied", "Denied"
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="driver_application",
+        limit_choices_to={'role': User.Role.PASSENGER} # Only passengers can apply
+    )
+    license_number = models.CharField(max_length=100)
+    years_of_experience = models.PositiveIntegerField()
+    # You can add more fields here like a short bio, etc.
+    
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    reviewed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name="reviewed_applications",
+        limit_choices_to={'role': User.Role.ADMIN}
+    )
+    
+    def __str__(self):
+        return f"Application for {self.user.get_full_name}"
